@@ -1,4 +1,4 @@
-rootProject.name = "example" // TODO: Change this to your addon id
+rootProject.name = "FarmersDelight"
 
 dependencyResolutionManagement {
     repositories {
@@ -8,7 +8,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            from("xyz.xenondevs.nova:catalog:0.17-alpha.1") // TODO: change this when updating to a newer Nova version
+            from("xyz.xenondevs.nova:catalog:0.17-alpha.23") // TODO: change this when updating to a newer Nova version
         }
     }
 }

@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-group = "com.example" // TODO: Change this to your group
-version = "1.0-SNAPSHOT" // TODO: Change this to your addon version
+group = "fr.ateastudio"
+version = "1.0-SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin)
@@ -22,12 +22,12 @@ dependencies {
 }
 
 addon {
-    id = project.name
-    name = project.name.replaceFirstChar(Char::uppercase)
+    id = "farmersdelight"
+    name = "FarmersDelight"
     version = project.version.toString()
     novaVersion = libs.versions.nova
-    main = "com.example.ExampleAddon" // TODO: Change this to your main class
-    authors = listOf("ExampleAuthor") // TODO: Set your list of authors
+    main = "fr.ateastudio.NovaFarmersDelight"
+    authors = listOf("Katalijst")
 }
 
 tasks {

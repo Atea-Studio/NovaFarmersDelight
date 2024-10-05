@@ -1,8 +1,8 @@
-package com.example
+package fr.ateastudio
 
 import xyz.xenondevs.nova.addon.Addon
 
-object ExampleAddon : Addon() {
+object NovaFarmersDelight : Addon() {
     
     override fun init() {
         // Called when the addon is initialized.
