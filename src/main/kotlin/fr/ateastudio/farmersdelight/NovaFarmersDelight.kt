@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/kotlin/fr/ateastudio/NovaFarmersDelight.kt
-package fr.ateastudio
-========
 package fr.ateastudio.farmersdelight
->>>>>>>> 358e6ac (Init project):src/main/kotlin/fr/ateastudio/farmersdelight/NovaFarmersDelight.kt
 
 import xyz.xenondevs.nova.addon.Addon
 

@@ -1,6 +1,6 @@
 package fr.ateastudio.registry
 
-import fr.ateastudio.NovaFarmersDelight
+import fr.ateastudio.farmersdelight.NovaFarmersDelight
 import xyz.xenondevs.nova.addon.registry.ToolTierRegistry
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage

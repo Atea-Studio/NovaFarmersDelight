@@ -1,6 +1,6 @@
 package fr.ateastudio.registry
 
-import fr.ateastudio.NovaFarmersDelight
+import fr.ateastudio.farmersdelight.NovaFarmersDelight
 import org.bukkit.Material
 import xyz.xenondevs.nova.addon.registry.ItemRegistry
 import xyz.xenondevs.nova.initialize.Init
