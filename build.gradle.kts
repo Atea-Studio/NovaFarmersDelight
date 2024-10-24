@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-group = "fr.ateastudio"
+group = "fr.ateastudio.farmersdelight"
 version = "1.0-SNAPSHOT"
 
 plugins {
@@ -26,7 +26,7 @@ addon {
     name = "FarmersDelight"
     version = project.version.toString()
     novaVersion = libs.versions.nova
-    main = "fr.ateastudio.NovaFarmersDelight"
+    main = "fr.ateastudio.farmersdelight.NovaFarmersDelight"
     authors = listOf("Katalijst")
 }
 
