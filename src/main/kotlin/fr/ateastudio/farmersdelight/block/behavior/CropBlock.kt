@@ -1,5 +1,6 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
+import fr.ateastudio.farmersdelight.registry.BlockStateProperties
 import org.bukkit.GameMode
 import org.bukkit.GameRule
 import org.bukkit.Material
@@ -17,6 +18,7 @@ import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
 import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
 import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
 import xyz.xenondevs.nova.util.BlockUtils
+import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
@@ -26,7 +28,6 @@ import kotlin.random.Random
 
 abstract class CropBlock() : BlockBehavior {
     open val dropProbability = 0.57
-    abstract fun stages() : List<NovaBlockState>
     abstract fun resultItem() : NovaItem?
     abstract fun seedItem() : NovaItem?
     
@@ -63,7 +64,7 @@ abstract class CropBlock() : BlockBehavior {
         val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
         var itemStack = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK]
         
-        if (player != null && itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(pos, state)) {
+        if (player != null && itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
                 if (itemStack.amount > 0) {
                     if (itemStack.amount > 1) {
@@ -88,7 +89,8 @@ abstract class CropBlock() : BlockBehavior {
     }
     
     override fun ticksRandomly(state: NovaBlockState): Boolean {
-        return !isMaxAge(state)
+        val shouldTick = !isMaxAge(state)
+        return shouldTick
     }
     
     override fun handleRandomTick(pos: BlockPos, state: NovaBlockState) {
@@ -96,13 +98,12 @@ abstract class CropBlock() : BlockBehavior {
         
         if (lightLevel >= 9) {
             val age = getAge(state)
-            if (age < getMaxAge()) {
+            if (age < getMaxAge(state)) {
                 val growSpeed = getGrowthSpeed(pos)
                 val tickSpeedMultiplier = (pos.world.getGameRuleValue(GameRule.RANDOM_TICK_SPEED) ?: 3) / 3
                 for (i in 1..tickSpeedMultiplier) {
                     if (Random.nextInt(((25.0F / growSpeed) + 1).toInt()) == 0) {
-                        val block = getStateForAge(age + 1)
-                        setBlock(pos, block)
+                        growCrop(pos, state)
                     }
                 }
             }
@@ -128,31 +129,31 @@ abstract class CropBlock() : BlockBehavior {
         return mayPlaceOn(pos.below, state) && pos.block.isEmpty
     }
     
-    abstract fun getMaxAge() : Int
-    
-    protected fun getAge(state: NovaBlockState) : Int {
-        return stages().indexOf(state)
+    private fun getMaxAge(state: NovaBlockState): Int {
+        return state.getOrThrow(BlockStateProperties.MAX_AGE)
     }
     
-    protected fun getStateForAge(age: Int) : NovaBlockState {
-        return stages()[age]
+    private fun getAge(state: NovaBlockState): Int {
+        return state.getOrThrow(BlockStateProperties.AGE)
+    }
+    
+    protected fun getStateForAge(state: NovaBlockState, age: Int) : NovaBlockState {
+        return state.with(BlockStateProperties.AGE, age)
     }
     
     protected fun isMaxAge(state: NovaBlockState) : Boolean {
-        return getAge(state) == getMaxAge()
+        return getAge(state) == getMaxAge(state)
     }
     
-    protected fun growCrop(pos: BlockPos, state: NovaBlockState) {
-        var newAge = getAge(state) + getBonemealAgeIncrease()
-        val maxAge = getMaxAge()
-        if (newAge > maxAge) {
-            newAge = maxAge
+    protected fun growCrop(pos: BlockPos, state: NovaBlockState, amount: Int = 1) {
+        if (!isMaxAge(state)) {
+            val age = getAge(state) + amount
+            updateBlockState(pos, getStateForAge(state, age))
         }
-        setBlock(pos, getStateForAge(newAge))
     }
     
-    protected fun getBonemealAgeIncrease() : Int {
-        val maxAge = getMaxAge()
+    protected fun getBonemealAgeIncrease(state: NovaBlockState) : Int {
+        val maxAge = getMaxAge(state)
         val min = (maxAge * (2.0F/7)).toInt()
         val max = (maxAge * (5.0F/7)).toInt()
         return Random.nextInt(min, max + 1)
@@ -224,22 +225,19 @@ abstract class CropBlock() : BlockBehavior {
         return (getRawBrightness(pos) >= 8)
     }
     
-    protected fun isValidBoneMealTarget(pos: BlockPos, state: NovaBlockState): Boolean {
+    protected fun isValidBoneMealTarget(state: NovaBlockState): Boolean {
         return !isMaxAge(state)
     }
     
-    protected fun isBoneMealSuccess(pos: BlockPos, state: NovaBlockState): Boolean {
-        return true
-    }
-    
     protected fun performBoneMeal(pos: BlockPos, state: NovaBlockState) {
-        growCrop(pos, state)
+        val amount = getBonemealAgeIncrease(state)
+        growCrop(pos, state, amount)
         // Spawn the "happy villager" particles (green particles like bone meal effect)
         pos.world.spawnParticle(
             Particle.HAPPY_VILLAGER, // Green particle
-            pos.location,                // Where to spawn the particle
-            30,                      // Number of particles
-            0.5, 1.0, 0.5,           // X, Y, Z offsets (to spread particles around)
+            pos.location.toCenterLocation(),                // Where to spawn the particle
+            8,                      // Number of particles
+            0.25, 0.0, 0.5,           // X, Y, Z offsets (to spread particles around)
             0.1                      // Speed of the particles (can be 0 for slow-moving particles)
         )
         pos.world.playSound(pos.location, Sound.ITEM_BONE_MEAL_USE, 1.0f, 1.0f)
@@ -257,11 +255,6 @@ abstract class CropBlock() : BlockBehavior {
         return pos.block.type == Material.FARMLAND
     }
     
-    /**
-     * Simulates the binomial distribution for seed drops.
-     * @param fortuneLevel The level of the Fortune enchantment.
-     * @return The number of seeds to drop.
-     */
     private fun simulateBinomialDrops(fortuneLevel: Int): Int {
         val trials = 3 + fortuneLevel // n trials: 3 base trials + 1 for each level of Fortune
         var seedDrops = 0
@@ -274,16 +267,6 @@ abstract class CropBlock() : BlockBehavior {
         }
         
         return seedDrops.coerceAtLeast(1) // Ensure at least 1 seed drops
-    }
-    
-    private fun setBlock(pos: BlockPos, state: NovaBlockState) {
-        val context = Context.intention(DefaultContextIntentions.BlockPlace)
-            .param(DefaultContextParamTypes.BLOCK_POS, pos)
-            .param(DefaultContextParamTypes.BLOCK_STATE_NOVA, state)
-            .param(DefaultContextParamTypes.BLOCK_PLACE_EFFECTS, false)
-            .build()
-        
-        BlockUtils.placeBlock(context)
     }
     
     private fun breakBlock(position: BlockPos){
