@@ -1,6 +1,8 @@
 package fr.ateastudio.farmersdelight.registry
 
 import fr.ateastudio.farmersdelight.NovaFarmersDelight
+import fr.ateastudio.farmersdelight.block.BlockStateProperties
+import fr.ateastudio.farmersdelight.block.ScopedBlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.Ageable
 import fr.ateastudio.farmersdelight.block.behavior.TomatoCrop
 import org.bukkit.Material
@@ -37,7 +39,7 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
     ): NovaBlock = block("${name}_crop") {
         block()
         behaviors(CROP, Ageable(maxAge), cropBehavior, BlockSounds(SoundGroup.CROP))
-        stateProperties(ScopedBlockStateProperties.AGE,ScopedBlockStateProperties.MAX_AGE)
+        stateProperties(ScopedBlockStateProperties.AGE, ScopedBlockStateProperties.MAX_AGE)
         models {
             stateBacked(BackingStateCategory.TRIPWIRE_UNATTACHED, BackingStateCategory.TRIPWIRE_ATTACHED)
             selectModel {

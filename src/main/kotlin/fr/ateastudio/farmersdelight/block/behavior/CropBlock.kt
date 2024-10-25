@@ -1,6 +1,6 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
-import fr.ateastudio.farmersdelight.registry.BlockStateProperties
+import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import org.bukkit.GameMode
 import org.bukkit.GameRule
 import org.bukkit.Material

@@ -1,6 +1,6 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
-import fr.ateastudio.farmersdelight.registry.BlockStateProperties
+import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState

@@ -1,4 +1,4 @@
-package fr.ateastudio.farmersdelight.registry
+package fr.ateastudio.farmersdelight.block
 
 import fr.ateastudio.farmersdelight.NovaFarmersDelight
 import xyz.xenondevs.nova.util.ResourceLocation
