@@ -13,5 +13,5 @@ object BlockStateProperties {
 object ScopedBlockStateProperties {
     val AGE = BlockStateProperties.AGE.scope(0..7)
     val MAX_AGE = BlockStateProperties.MAX_AGE.scope(0..7)
-    val BUDDING_AGE = BlockStateProperties.BUDDING_AGE.scope(0..7)
+    val BUDDING_AGE = BlockStateProperties.BUDDING_AGE.scope(-1..7)
 }

@@ -4,8 +4,8 @@ import fr.ateastudio.farmersdelight.NovaFarmersDelight
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.ScopedBlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.Ageable
+import fr.ateastudio.farmersdelight.block.behavior.CabbageCrop
 import fr.ateastudio.farmersdelight.block.behavior.TomatoCrop
-import fr.ateastudio.farmersdelight.util.LogDebug
 import org.bukkit.Material
 import xyz.xenondevs.nova.addon.registry.BlockRegistry
 import xyz.xenondevs.nova.initialize.Init
@@ -31,12 +31,13 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
     )
     
     val TOMATOES_CROP = cropBlock("tomatoes", TomatoCrop, 7,3)
+    val CABBAGES_CROP = cropBlock("cabbages", CabbageCrop, 7)
     
     private fun cropBlock(
         name: String,
         cropBehavior: BlockBehaviorHolder,
         maxAge: Int,
-        buddingAge: Int = 0,
+        buddingAge: Int = -1,
         block: NovaBlockBuilder.() -> Unit ={}
     ): NovaBlock = block("${name}_crop") {
         block()
@@ -49,11 +50,9 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
                 var id = if (age > maxAge) maxAge else age
                 if (id > buddingAge) {
                     id -= (buddingAge + 1)
-                    LogDebug("id: $id")
                     getModel("block/${name}_stage$id")
                 }
                 else {
-                    LogDebug("budding_id: $id")
                     getModel("block/budding_${name}_stage$id")
                 }
             }

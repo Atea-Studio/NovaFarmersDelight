@@ -18,4 +18,14 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
         }
     }
     val TOMATO = registerItem("tomato")
+    
+    val CABBAGE_SEEDS = item(Blocks.CABBAGES_CROP) {
+        name(Component.translatable("item.farmersdelight.cabbage_seeds"))
+        models {
+            selectModel {
+                createLayeredModel("item/cabbage_seeds")
+            }
+        }
+    }
+    val CABBAGE = registerItem("cabbage")
 }
