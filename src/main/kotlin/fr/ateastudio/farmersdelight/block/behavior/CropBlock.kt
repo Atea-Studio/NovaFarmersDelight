@@ -26,7 +26,7 @@ import xyz.xenondevs.nova.world.item.NovaItem
 import kotlin.random.Random
 
 
-abstract class CropBlock() : BlockBehavior {
+abstract class CropBlock : BlockBehavior {
     open val dropProbability = 0.57
     abstract fun resultItem() : NovaItem?
     abstract fun seedItem() : NovaItem?
@@ -129,11 +129,11 @@ abstract class CropBlock() : BlockBehavior {
         return mayPlaceOn(pos.below, state) && pos.block.isEmpty
     }
     
-    private fun getMaxAge(state: NovaBlockState): Int {
+    protected fun getMaxAge(state: NovaBlockState): Int {
         return state.getOrThrow(BlockStateProperties.MAX_AGE)
     }
     
-    private fun getAge(state: NovaBlockState): Int {
+    protected fun getAge(state: NovaBlockState): Int {
         return state.getOrThrow(BlockStateProperties.AGE)
     }
     
@@ -145,21 +145,25 @@ abstract class CropBlock() : BlockBehavior {
         return getAge(state) == getMaxAge(state)
     }
     
-    protected fun growCrop(pos: BlockPos, state: NovaBlockState, amount: Int = 1) {
+    protected open fun growCrop(pos: BlockPos, state: NovaBlockState, amount: Int = 1) {
         if (!isMaxAge(state)) {
             val age = getAge(state) + amount
-            updateBlockState(pos, getStateForAge(state, age))
+            val maxAge = getMaxAge(state)
+            if (age > maxAge)
+                updateBlockState(pos, getStateForAge(state, maxAge))
+            else
+                updateBlockState(pos, getStateForAge(state, age))
         }
     }
     
-    protected fun getBonemealAgeIncrease(state: NovaBlockState) : Int {
+    private fun getBonemealAgeIncrease(state: NovaBlockState) : Int {
         val maxAge = getMaxAge(state)
         val min = (maxAge * (2.0F/7)).toInt()
         val max = (maxAge * (5.0F/7)).toInt()
         return Random.nextInt(min, max + 1)
     }
     
-    protected fun getGrowthSpeed(blockPos: BlockPos): Float {
+    private fun getGrowthSpeed(blockPos: BlockPos): Float {
         val cropBlock= blockPos.block
         var growthSpeed = 1.0f
         val belowBlockPos = blockPos.below
@@ -216,12 +220,12 @@ abstract class CropBlock() : BlockBehavior {
         return growthSpeed
     }
     
-    protected fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
+    private fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
         val blockBelow = pos.below
         return hasSufficientLight(pos) && mayPlaceOn(blockBelow, state)
     }
     
-    protected fun hasSufficientLight(pos: BlockPos): Boolean {
+    private fun hasSufficientLight(pos: BlockPos): Boolean {
         return (getRawBrightness(pos) >= 8)
     }
     
@@ -229,9 +233,14 @@ abstract class CropBlock() : BlockBehavior {
         return !isMaxAge(state)
     }
     
-    protected fun performBoneMeal(pos: BlockPos, state: NovaBlockState) {
+    protected open fun performBoneMeal(pos: BlockPos, state: NovaBlockState) {
         val amount = getBonemealAgeIncrease(state)
         growCrop(pos, state, amount)
+        showBoneMealParticle(pos)
+    }
+    
+    protected fun showBoneMealParticle(pos: BlockPos) {
+        
         // Spawn the "happy villager" particles (green particles like bone meal effect)
         pos.world.spawnParticle(
             Particle.HAPPY_VILLAGER, // Green particle
@@ -255,7 +264,7 @@ abstract class CropBlock() : BlockBehavior {
         return pos.block.type == Material.FARMLAND
     }
     
-    private fun simulateBinomialDrops(fortuneLevel: Int): Int {
+    protected fun simulateBinomialDrops(fortuneLevel: Int): Int {
         val trials = 3 + fortuneLevel // n trials: 3 base trials + 1 for each level of Fortune
         var seedDrops = 0
         

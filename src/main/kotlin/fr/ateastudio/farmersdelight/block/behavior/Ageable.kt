@@ -8,10 +8,11 @@ import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 
-open class Ageable(private val maxAge: Int) : BlockBehavior {
-
+open class Ageable(private val maxAge: Int, private val buddingAge: Int = 0) : BlockBehavior {
+    
     override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
-        updateBlockState(pos, state.with(BlockStateProperties.MAX_AGE, maxAge))
+        updateBlockState(pos, state.with(BlockStateProperties.MAX_AGE, maxAge)
+            .with(BlockStateProperties.BUDDING_AGE, buddingAge))
     }
     
 }

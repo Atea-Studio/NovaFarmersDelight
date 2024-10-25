@@ -7,9 +7,11 @@ import xyz.xenondevs.nova.world.block.state.property.impl.IntProperty
 object BlockStateProperties {
     val AGE = IntProperty(ResourceLocation(NovaFarmersDelight, "age"))
     val MAX_AGE = IntProperty(ResourceLocation(NovaFarmersDelight, "max_age"))
+    val BUDDING_AGE = IntProperty(ResourceLocation(NovaFarmersDelight, "budding_age"))
 }
 
 object ScopedBlockStateProperties {
     val AGE = BlockStateProperties.AGE.scope(0..7)
     val MAX_AGE = BlockStateProperties.MAX_AGE.scope(0..7)
+    val BUDDING_AGE = BlockStateProperties.BUDDING_AGE.scope(0..7)
 }

@@ -5,6 +5,7 @@ import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.ScopedBlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.Ageable
 import fr.ateastudio.farmersdelight.block.behavior.TomatoCrop
+import fr.ateastudio.farmersdelight.util.LogDebug
 import org.bukkit.Material
 import xyz.xenondevs.nova.addon.registry.BlockRegistry
 import xyz.xenondevs.nova.initialize.Init
@@ -29,23 +30,32 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
         breakParticles = Material.TALL_GRASS
     )
     
-    val TOMATOES_CROP = cropBlock("tomatoes", 3, TomatoCrop)
+    val TOMATOES_CROP = cropBlock("tomatoes", TomatoCrop, 7,3)
     
     private fun cropBlock(
         name: String,
-        maxAge: Int,
         cropBehavior: BlockBehaviorHolder,
+        maxAge: Int,
+        buddingAge: Int = 0,
         block: NovaBlockBuilder.() -> Unit ={}
     ): NovaBlock = block("${name}_crop") {
         block()
-        behaviors(CROP, Ageable(maxAge), cropBehavior, BlockSounds(SoundGroup.CROP))
-        stateProperties(ScopedBlockStateProperties.AGE, ScopedBlockStateProperties.MAX_AGE)
+        behaviors(CROP, Ageable(maxAge, buddingAge), cropBehavior, BlockSounds(SoundGroup.CROP))
+        stateProperties(ScopedBlockStateProperties.AGE, ScopedBlockStateProperties.BUDDING_AGE, ScopedBlockStateProperties.MAX_AGE)
         models {
             stateBacked(BackingStateCategory.TRIPWIRE_UNATTACHED, BackingStateCategory.TRIPWIRE_ATTACHED)
             selectModel {
                 val age = getPropertyValueOrThrow(BlockStateProperties.AGE)
-                val id = if (age > maxAge) maxAge else age
-                getModel("block/${name}_stage$id")
+                var id = if (age > maxAge) maxAge else age
+                if (id > buddingAge) {
+                    id -= (buddingAge + 1)
+                    LogDebug("id: $id")
+                    getModel("block/${name}_stage$id")
+                }
+                else {
+                    LogDebug("budding_id: $id")
+                    getModel("block/budding_${name}_stage$id")
+                }
             }
         }
     }
