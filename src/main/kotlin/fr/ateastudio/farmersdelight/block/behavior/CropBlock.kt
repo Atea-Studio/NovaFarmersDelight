@@ -28,7 +28,10 @@ import kotlin.random.Random
 
 abstract class CropBlock : BlockBehavior {
     open val dropProbability = 0.57
+    open val badCropResultProbability = 0.05f
+    
     abstract fun resultItem() : NovaItem?
+    protected open fun badResultItem() : NovaItem? = null
     abstract fun seedItem() : NovaItem?
     
     override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>): List<ItemStack> {
@@ -36,6 +39,7 @@ abstract class CropBlock : BlockBehavior {
         val tool = ctx[DefaultContextParamTypes.TOOL_ITEM_STACK]
         val seedItem = seedItem()
         val resultItem = resultItem()
+        val badResultItem = badResultItem()
         if (player?.gameMode == GameMode.CREATIVE) {
             return emptyList()
         }
@@ -48,7 +52,12 @@ abstract class CropBlock : BlockBehavior {
                 result.add(seedItem.createItemStack(quantity))
             }
             if (resultItem is NovaItem) {
-                result.add(resultItem.createItemStack())
+                if (badResultItem is NovaItem && Random.nextFloat() < badCropResultProbability) {
+                    result.add(badResultItem.createItemStack())
+                }
+                else {
+                    result.add(resultItem.createItemStack())
+                }
             }
             return result
         }
@@ -220,12 +229,12 @@ abstract class CropBlock : BlockBehavior {
         return growthSpeed
     }
     
-    private fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
+    protected open fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
         val blockBelow = pos.below
-        return hasSufficientLight(pos) && mayPlaceOn(blockBelow, state)
+        return mayPlaceOn(blockBelow, state)
     }
     
-    private fun hasSufficientLight(pos: BlockPos): Boolean {
+    protected open fun hasSufficientLight(pos: BlockPos): Boolean {
         return (getRawBrightness(pos) >= 8)
     }
     
@@ -252,7 +261,7 @@ abstract class CropBlock : BlockBehavior {
         pos.world.playSound(pos.location, Sound.ITEM_BONE_MEAL_USE, 1.0f, 1.0f)
     }
     
-    private fun getRawBrightness(pos: BlockPos): Byte {
+    protected fun getRawBrightness(pos: BlockPos): Byte {
         return if (pos.block.lightLevel < pos.block.lightFromSky) {
             pos.block.lightFromSky
         } else {
@@ -261,7 +270,7 @@ abstract class CropBlock : BlockBehavior {
     }
     
     protected open fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
-        return pos.block.type == Material.FARMLAND
+        return pos.block.type == Material.FARMLAND && hasSufficientLight(pos)
     }
     
     protected fun simulateBinomialDrops(fortuneLevel: Int): Int {
@@ -278,7 +287,7 @@ abstract class CropBlock : BlockBehavior {
         return seedDrops.coerceAtLeast(1) // Ensure at least 1 seed drops
     }
     
-    private fun breakBlock(position: BlockPos){
+    protected fun breakBlock(position: BlockPos){
         val context = Context.intention(DefaultContextIntentions.BlockBreak)
             .param(DefaultContextParamTypes.BLOCK_POS, position)
             .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)

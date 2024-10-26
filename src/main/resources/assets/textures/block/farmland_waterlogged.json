@@ -1,0 +1,37 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"2": "block/water_still",
+		"3": "block/water_flow",
+		"particle": "block/dirt",
+		"dirt": "block/dirt",
+		"top": "block/farmland_moist"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 13, 16],
+			"faces": {
+				"north": {"uv": [0, 3, 16, 16], "texture": "#dirt", "cullface": "north"},
+				"east": {"uv": [0, 3, 16, 16], "texture": "#dirt", "cullface": "east"},
+				"south": {"uv": [0, 3, 16, 16], "texture": "#dirt", "cullface": "south"},
+				"west": {"uv": [0, 3, 16, 16], "texture": "#dirt", "cullface": "west"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#top"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#dirt", "cullface": "down"}
+			}
+		},
+		{
+			"from": [0, 13, 0],
+			"to": [16, 14, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 13, 0]},
+			"faces": {
+				"north": {"uv": [0, 0, 16, 1], "texture": "#3", "cullface": "north", "tintindex": 0},
+				"east": {"uv": [0, 0, 16, 1], "texture": "#3", "cullface": "east", "tintindex": 0},
+				"south": {"uv": [0, 0, 16, 1], "texture": "#3", "cullface": "south", "tintindex": 0},
+				"west": {"uv": [0, 0, 16, 1], "texture": "#3", "cullface": "west", "tintindex": 0},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#2", "tintindex": 0}
+			}
+		}
+	]
+}

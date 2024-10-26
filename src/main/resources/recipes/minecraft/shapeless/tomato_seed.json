@@ -1,0 +1,13 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:tomatoes_crop",
+  "ingredients": [
+    {
+      "items": [
+        "farmersdelight:tomato",
+        "farmersdelight:rotten_tomato"
+      ],
+      "amount": 1
+    }
+  ]
+}

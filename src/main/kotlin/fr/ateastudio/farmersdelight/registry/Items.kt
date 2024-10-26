@@ -18,6 +18,10 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
         }
     }
     val TOMATO = registerItem("tomato")
+    val ROTTEN_TOMATO = registerItem("rotten_tomato")
+    
+    val WATERLOGGED_FARMLAND = registerItem(Blocks.FARMLAND_WATERLOGGED)
+    
     
     val CABBAGE_SEEDS = item(Blocks.CABBAGES_CROP) {
         name(Component.translatable("item.farmersdelight.cabbage_seeds"))

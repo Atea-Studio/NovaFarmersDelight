@@ -30,8 +30,16 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
         breakParticles = Material.TALL_GRASS
     )
     
+    val FARMLAND_WATERLOGGED = block("farmland_waterlogged") {
+        models {
+            stateBacked(BackingStateCategory.MUSHROOM_BLOCK, BackingStateCategory.NOTE_BLOCK)
+        }
+
+    }
+    
     val TOMATOES_CROP = cropBlock("tomatoes", TomatoCrop, 7,3)
     val CABBAGES_CROP = cropBlock("cabbages", CabbageCrop, 7)
+    
     
     private fun cropBlock(
         name: String,

@@ -3,6 +3,7 @@ package fr.ateastudio.farmersdelight.block.behavior
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import org.bukkit.GameMode
 import org.bukkit.Material
+import org.bukkit.SoundCategory
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
@@ -13,16 +14,23 @@ import xyz.xenondevs.nova.util.dropItems
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.item.NovaItem
+import kotlin.random.Random
 
 
 abstract class BerryBlock : CropBlock() {
+    
+    protected open val pickUpSound = "minecraft:block.sweet_berry_bush.pick_berries"
     
     override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
         val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
         var itemStack = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK]
         
         if (player != null) {
-            if (itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+            if (isMaxAge(state)){
+                doDrop(pos)
+                updateBlockState(pos, getStateForAge(state, getBuddingAge(state) + 1))
+            }
+            else if (itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
                 if (player.gameMode != GameMode.CREATIVE) {
                     if (itemStack.amount > 0) {
                         if (itemStack.amount > 1) {
@@ -42,12 +50,25 @@ abstract class BerryBlock : CropBlock() {
                 performBoneMeal(pos, state)
                 return true
             }
-            else if (isMaxAge(state)){
-                doDrop(pos)
-                updateBlockState(pos, getStateForAge(state, getBuddingAge(state) + 1))
-            }
         }
         return false
+    }
+    
+    override fun ticksRandomly(state: NovaBlockState): Boolean {
+        val shouldTick = !isMaxAge(state)
+        return shouldTick
+    }
+    
+    override fun handleRandomTick(pos: BlockPos, state: NovaBlockState) {
+        val age = getAge(state)
+        val maxAge = getMaxAge(state)
+        val lightLevel = getRawBrightness(pos.add(0,1,0))
+        if (age < maxAge && Random.nextInt(5) == 0 && lightLevel >= 9) {
+            growCrop(pos, state)
+        }
+        if (!canSurvive(state, pos)) {
+            breakBlock(pos)
+        }
     }
     
     override fun performBoneMeal(pos: BlockPos, state: NovaBlockState) {
@@ -66,14 +87,31 @@ abstract class BerryBlock : CropBlock() {
         showBoneMealParticle(pos)
     }
     
+    override fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
+        return pos.block.type == Material.GRASS_BLOCK ||
+            pos.block.type == Material.DIRT ||
+            pos.block.type == Material.PODZOL ||
+            pos.block.type == Material.COARSE_DIRT ||
+            pos.block.type == Material.FARMLAND ||
+            pos.block.type == Material.MOSS_BLOCK
+            
+    }
+    
     private fun doDrop(pos: BlockPos) {
         val result = mutableListOf<ItemStack>()
         val resultItem = resultItem()
+        val badResultItem = badResultItem()
         if (resultItem is NovaItem) {
-            // Determine the amount of drops, with possible modification from the Fortune enchantment
-            val quantity = simulateBinomialDrops(0)
-            result.add(resultItem.createItemStack(quantity))
+            if (badResultItem is NovaItem && Random.nextFloat() < badCropResultProbability) {
+                result.add(badResultItem.createItemStack())
+            }
+            else {
+                // Determine the amount of drops, with possible modification from the Fortune enchantment
+                val quantity = 1 + Random.nextInt(2)
+                result.add(resultItem.createItemStack(quantity))
+            }
         }
+        pos.world.playSound(pos.location, pickUpSound, SoundCategory.BLOCKS, 1.0f, 1.0f)
         pos.location.dropItems(result)
     }
     
