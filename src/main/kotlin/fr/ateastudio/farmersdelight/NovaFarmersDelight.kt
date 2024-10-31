@@ -1,13 +1,13 @@
 package fr.ateastudio.farmersdelight
 
-import fr.ateastudio.farmersdelight.block.behavior.CropListener
+import fr.ateastudio.farmersdelight.block.MuddyFarmlandListener
 import xyz.xenondevs.nova.addon.Addon
 import xyz.xenondevs.nova.util.registerEvents
 
 object NovaFarmersDelight : Addon() {
     
     override fun init() {
-        CropListener.registerEvents()
+        MuddyFarmlandListener.registerEvents()
     }
     
     override fun onEnable() {

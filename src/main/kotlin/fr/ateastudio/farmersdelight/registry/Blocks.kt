@@ -5,6 +5,8 @@ import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.ScopedBlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.Ageable
 import fr.ateastudio.farmersdelight.block.behavior.CabbageCrop
+import fr.ateastudio.farmersdelight.block.behavior.MuddyFarmland
+import fr.ateastudio.farmersdelight.block.behavior.RiceCrop
 import fr.ateastudio.farmersdelight.block.behavior.TomatoCrop
 import org.bukkit.Material
 import xyz.xenondevs.nova.addon.registry.BlockRegistry
@@ -29,15 +31,17 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
         requiresToolForDrops = false,
         breakParticles = Material.TALL_GRASS
     )
+    private val MUD = Breakable(0.5, VanillaToolCategories.SHOVEL, VanillaToolTiers.WOOD, false, Material.MUD)
     
-    val FARMLAND_WATERLOGGED = block("farmland_waterlogged") {
+    val MUDDY_FARMLAND = block("muddy_farmland") {
+        behaviors(MUD, BlockSounds(SoundGroup.MUD), MuddyFarmland)
         models {
-            stateBacked(BackingStateCategory.MUSHROOM_BLOCK, BackingStateCategory.NOTE_BLOCK)
+            stateBacked(BackingStateCategory.LEAVES, BackingStateCategory.NOTE_BLOCK)
         }
-
     }
     
     val TOMATOES_CROP = cropBlock("tomatoes", TomatoCrop, 7,3)
+    val RICE_CROP = cropBlock("rice", RiceCrop, 7,3)
     val CABBAGES_CROP = cropBlock("cabbages", CabbageCrop, 7)
     
     

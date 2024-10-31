@@ -20,7 +20,18 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
     val TOMATO = registerItem("tomato")
     val ROTTEN_TOMATO = registerItem("rotten_tomato")
     
-    val WATERLOGGED_FARMLAND = registerItem(Blocks.FARMLAND_WATERLOGGED)
+    val RICE = item(Blocks.RICE_CROP) {
+        name(Component.translatable("item.farmersdelight.rice"))
+        models {
+            selectModel {
+                createLayeredModel("item/rice")
+            }
+        }
+    }
+    val RICE_PANICLE = registerItem("rice_panicle")
+    
+    
+    val MUDDY_FARMLAND = registerItem(Blocks.MUDDY_FARMLAND)
     
     
     val CABBAGE_SEEDS = item(Blocks.CABBAGES_CROP) {

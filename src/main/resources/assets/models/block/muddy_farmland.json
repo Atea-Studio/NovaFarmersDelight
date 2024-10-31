@@ -1,0 +1,22 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"mud": "minecraft:block/mud",
+		"top": "farmersdelight:block/muddy_farmland_top",
+		"particle": "minecraft:block/mud"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 15, 16],
+			"faces": {
+				"north": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "north"},
+				"east": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "east"},
+				"south": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "south"},
+				"west": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "west"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#top"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#mud", "cullface": "down"}
+			}
+		}
+	]
+}
