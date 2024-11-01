@@ -17,6 +17,7 @@ import xyz.xenondevs.nova.resources.layout.block.BackingStateCategory
 import xyz.xenondevs.nova.world.block.NovaBlock
 import xyz.xenondevs.nova.world.block.NovaBlockBuilder
 import xyz.xenondevs.nova.world.block.behavior.BlockBehaviorHolder
+import xyz.xenondevs.nova.world.block.behavior.BlockDrops
 import xyz.xenondevs.nova.world.block.behavior.BlockSounds
 import xyz.xenondevs.nova.world.block.behavior.Breakable
 import xyz.xenondevs.nova.world.block.sound.SoundGroup
@@ -38,21 +39,21 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
         }
     }
     
-    val BEETROOT_CRATE = nonInteractiveBlock("beetroot_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
-    val CARROT_CRATE = nonInteractiveBlock("carrot_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
-    val POTATO_CRATE = nonInteractiveBlock("potato_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
+    val BEETROOT_CRATE = nonInteractiveBlock("beetroot_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
+    val CARROT_CRATE = nonInteractiveBlock("carrot_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
+    val POTATO_CRATE = nonInteractiveBlock("potato_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
     
     val TOMATOES_CROP = cropBlock("tomatoes", TomatoCrop, 7,3)
     val RICE_CROP = cropBlock("rice", RiceCrop, 7,3)
     val CABBAGES_CROP = cropBlock("cabbages", CabbageCrop, 7)
     
     val ONION_CROP = cropBlock("onions", OnionCrop, 3)
-    val ONION_CRATE = nonInteractiveBlock("onion_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
+    val ONION_CRATE = nonInteractiveBlock("onion_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
     
-    val TOMATO_CRATE = nonInteractiveBlock("tomato_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
-    val RICE_BAG = nonInteractiveBlock("rice_bag") { behaviors(BAG, BlockSounds(SoundGroup.WOOL)) }
-    val RICE_BALE = nonInteractiveBlock("rice_bale") { behaviors(BALE, BlockSounds(SoundGroup.GRASS)) }
-    val CABBAGE_CRATE = nonInteractiveBlock("cabbage_crate") { behaviors(CRATE, BlockSounds(SoundGroup.WOOD)) }
+    val TOMATO_CRATE = nonInteractiveBlock("tomato_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
+    val RICE_BAG = nonInteractiveBlock("rice_bag") { behaviors(BAG, BlockDrops, BlockSounds(SoundGroup.WOOL)) }
+    val RICE_BALE = nonInteractiveBlock("rice_bale") { behaviors(BALE, BlockDrops, BlockSounds(SoundGroup.GRASS)) }
+    val CABBAGE_CRATE = nonInteractiveBlock("cabbage_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
     
     private fun nonInteractiveBlock(
         name: String,
