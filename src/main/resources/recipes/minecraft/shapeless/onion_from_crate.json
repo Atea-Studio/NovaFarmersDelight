@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:onions_crop",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:onion_crate": 1
+  }
+}

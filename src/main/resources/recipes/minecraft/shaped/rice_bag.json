@@ -1,0 +1,13 @@
+{
+  "category": "building",
+  "result": "farmersdelight:rice_bag",
+  "amount": 1,
+  "shape": [
+    "rrr",
+    "rrr",
+    "rrr"
+  ],
+  "ingredients": {
+    "r": "farmersdelight:rice_crop"
+  }
+}

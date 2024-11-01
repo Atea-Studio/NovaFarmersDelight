@@ -1,0 +1,13 @@
+{
+  "category": "building",
+  "result": "farmersdelight:beetroot_crate",
+  "amount": 1,
+  "shape": [
+    "rrr",
+    "rrr",
+    "rrr"
+  ],
+  "ingredients": {
+    "r": "minecraft:beetroot"
+  }
+}

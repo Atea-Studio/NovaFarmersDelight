@@ -39,7 +39,6 @@ object TomatoCrop : BerryBlock() {
     
     override fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
         return pos.block.type == Material.FARMLAND && hasSufficientLight(pos)
-        
     }
     
     override fun handleRandomTick(pos: BlockPos, state: NovaBlockState) {

@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "minecraft:carrot",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:carrot_crate": 1
+  }
+}

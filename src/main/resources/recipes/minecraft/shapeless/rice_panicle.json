@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:rice_panicle",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:rice_bale": 1
+  }
+}

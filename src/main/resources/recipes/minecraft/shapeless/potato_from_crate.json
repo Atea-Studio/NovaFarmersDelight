@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "minecraft:potato",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:potato_crate": 1
+  }
+}

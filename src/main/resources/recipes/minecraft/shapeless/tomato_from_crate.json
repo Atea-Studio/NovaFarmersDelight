@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:tomato",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:tomato_crate": 1
+  }
+}

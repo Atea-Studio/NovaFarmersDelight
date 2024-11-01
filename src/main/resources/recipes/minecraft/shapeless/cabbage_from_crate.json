@@ -1,0 +1,8 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:cabbage",
+  "amount": 9,
+  "ingredients": {
+    "farmersdelight:cabbage_crate": 1
+  }
+}
