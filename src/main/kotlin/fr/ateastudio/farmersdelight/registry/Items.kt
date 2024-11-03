@@ -10,11 +10,19 @@ import xyz.xenondevs.nova.world.item.behavior.Consumable
 @Suppress("unused")
 @Init(stage = InitStage.PRE_PACK)
 object Items : ItemRegistry by NovaFarmersDelight.registry {
-    val MUDDY_FARMLAND = registerItem(Blocks.MUDDY_FARMLAND)
+    
+    val COOKING_POT = item(Blocks.COOKING_POT) {
+        name(Component.translatable("item.farmersdelight.cooking_pot"))
+        models {
+            selectModel {
+                createLayeredModel("item/cooking_pot")
+            }
+        }
+    }
+    
     val BEETROOT_CRATE = registerItem(Blocks.BEETROOT_CRATE)
     val CARROT_CRATE = registerItem(Blocks.CARROT_CRATE)
     val POTATO_CRATE = registerItem(Blocks.POTATO_CRATE)
-    
     
     val TOMATO_SEEDS = item(Blocks.TOMATOES_CROP) {
         name(Component.translatable("item.farmersdelight.tomato_seeds"))
@@ -39,6 +47,7 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
     val RICE_PANICLE = registerItem("rice_panicle")
     val RICE_BAG = registerItem(Blocks.RICE_BAG)
     val RICE_BALE = registerItem(Blocks.RICE_BALE)
+    val MUDDY_FARMLAND = registerItem(Blocks.MUDDY_FARMLAND)
     
     val CABBAGE_SEEDS = item(Blocks.CABBAGES_CROP) {
         name(Component.translatable("item.farmersdelight.cabbage_seeds"))

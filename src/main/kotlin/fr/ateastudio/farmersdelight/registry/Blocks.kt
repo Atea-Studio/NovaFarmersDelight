@@ -2,13 +2,16 @@ package fr.ateastudio.farmersdelight.registry
 
 import fr.ateastudio.farmersdelight.NovaFarmersDelight
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
+import fr.ateastudio.farmersdelight.block.CookingPotSupport
 import fr.ateastudio.farmersdelight.block.ScopedBlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.Ageable
 import fr.ateastudio.farmersdelight.block.behavior.CabbageCrop
+import fr.ateastudio.farmersdelight.block.behavior.CookingPotBehavior
 import fr.ateastudio.farmersdelight.block.behavior.MuddyFarmland
 import fr.ateastudio.farmersdelight.block.behavior.OnionCrop
 import fr.ateastudio.farmersdelight.block.behavior.RiceCrop
 import fr.ateastudio.farmersdelight.block.behavior.TomatoCrop
+import fr.ateastudio.farmersdelight.tileentity.CookingPot
 import org.bukkit.Material
 import xyz.xenondevs.nova.addon.registry.BlockRegistry
 import xyz.xenondevs.nova.initialize.Init
@@ -20,6 +23,9 @@ import xyz.xenondevs.nova.world.block.behavior.BlockBehaviorHolder
 import xyz.xenondevs.nova.world.block.behavior.BlockDrops
 import xyz.xenondevs.nova.world.block.behavior.BlockSounds
 import xyz.xenondevs.nova.world.block.behavior.Breakable
+import xyz.xenondevs.nova.world.block.behavior.TileEntityDrops
+import xyz.xenondevs.nova.world.block.behavior.TileEntityInteractive
+import xyz.xenondevs.nova.world.block.behavior.TileEntityLimited
 import xyz.xenondevs.nova.world.block.sound.SoundGroup
 import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 import xyz.xenondevs.nova.world.item.tool.VanillaToolTiers
@@ -31,7 +37,8 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
     private val BAG = Breakable(0.8, VanillaToolCategories.SHEARS, VanillaToolTiers.WOOD, false, Material.WHITE_WOOL)
     private val BALE = Breakable(0.8, VanillaToolCategories.HOE, VanillaToolTiers.WOOD, false, Material.HAY_BLOCK)
     private val CRATE = Breakable(2.0, VanillaToolCategories.AXE, VanillaToolTiers.WOOD, false, Material.OAK_PLANKS)
-   
+    private val LIGHT_METAL = Breakable(0.5, VanillaToolCategories.PICKAXE, VanillaToolTiers.WOOD, false, Material.IRON_BLOCK)
+    
     val BEETROOT_CRATE = nonInteractiveBlock("beetroot_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
     val CARROT_CRATE = nonInteractiveBlock("carrot_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
     val POTATO_CRATE = nonInteractiveBlock("potato_crate") { behaviors(CRATE, BlockDrops, BlockSounds(SoundGroup.WOOD)) }
@@ -53,13 +60,36 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
         }
     }
     
+    val COOKING_POT = tileEntity("cooking_pot", ::CookingPot) {
+        tickrate(0)
+        behaviors(
+            TileEntityLimited,
+            TileEntityDrops,
+            TileEntityInteractive,
+            LIGHT_METAL,
+            BlockSounds(SoundGroup.LANTERN),
+            CookingPotBehavior
+        )
+        stateProperties(ScopedBlockStateProperties.SUPPORT)
+        models {
+            selectModel {
+                val support = getPropertyValueOrThrow(BlockStateProperties.SUPPORT)
+                when (support) {
+                    CookingPotSupport.HANDLE -> getModel("block/cooking_pot_handle")
+                    CookingPotSupport.TRAY -> getModel("block/cooking_pot_tray")
+                    else -> getModel("block/cooking_pot")
+                }
+            }
+        }
+    }
+    
     private fun nonInteractiveBlock(
         name: String,
         block: NovaBlockBuilder.() -> Unit
     ): NovaBlock = block(name) {
         block()
         models {
-            stateBacked(BackingStateCategory.MUSHROOM_BLOCK, BackingStateCategory.NOTE_BLOCK)
+            stateBacked(BackingStateCategory.NOTE_BLOCK, BackingStateCategory.MUSHROOM_BLOCK)
         }
     }
     
