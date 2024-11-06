@@ -61,7 +61,6 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
     }
     
     val COOKING_POT = tileEntity("cooking_pot", ::CookingPot) {
-        tickrate(0)
         behaviors(
             TileEntityLimited,
             TileEntityDrops,
@@ -70,7 +69,8 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
             BlockSounds(SoundGroup.LANTERN),
             CookingPotBehavior
         )
-        stateProperties(ScopedBlockStateProperties.SUPPORT)
+        tickrate(1)
+        stateProperties(ScopedBlockStateProperties.SUPPORT, ScopedBlockStateProperties.HEATED)
         models {
             selectModel {
                 val support = getPropertyValueOrThrow(BlockStateProperties.SUPPORT)

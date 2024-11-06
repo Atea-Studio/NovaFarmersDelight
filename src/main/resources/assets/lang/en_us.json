@@ -1,1 +1,5 @@
-{}
+{
+  "block.farmersdelight.cooking_pot": "    Cooking Pot",
+  "menu.farmersdelight.heated": "Heated",
+  "menu.farmersdelight.need_heat": "Need heat from below"
+}

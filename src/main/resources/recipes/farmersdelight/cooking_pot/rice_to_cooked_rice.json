@@ -1,0 +1,8 @@
+{
+  "inputs": [
+    "farmersdelight:rice_crop"
+  ],
+  "result": "farmersdelight:cooked_rice",
+  "container": "minecraft:bowl",
+  "time": 30
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "farmersdelight:item/gui22px",
+  "textures": {
+    "layer0": "farmersdelight:item/gui/arrow_progress_22"
+  }
+}

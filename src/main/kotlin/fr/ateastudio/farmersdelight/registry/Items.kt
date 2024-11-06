@@ -70,5 +70,6 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
         }
     }
     val ONION_CRATE = registerItem(Blocks.ONION_CRATE)
+    val COOKED_RICE = registerItem("cooked_rice", Consumable)
     
 }
