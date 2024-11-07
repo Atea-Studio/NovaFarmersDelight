@@ -13,6 +13,7 @@ object Items : ItemRegistry by NovaFarmersDelight.registry {
     
     val COOKING_POT = item(Blocks.COOKING_POT) {
         name(Component.translatable("item.farmersdelight.cooking_pot"))
+        maxStackSize(1)
         models {
             selectModel {
                 createLayeredModel("item/cooking_pot")

@@ -1,6 +1,7 @@
 package fr.ateastudio.farmersdelight.util
 
 import org.bukkit.Material
+import org.bukkit.craftbukkit.inventory.CraftItemStack
 import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.util.item.novaItem
@@ -50,9 +51,5 @@ fun ItemStack.hasCraftingRemainingItem(): Boolean {
         return !this.getCraftingRemainingItem().isEmpty
 }
 
-fun ItemStack.split(pAmount: Int): ItemStack {
-    val i = pAmount.coerceAtMost(this.amount) // Ensure we don't split more than the current amount
-    val itemStack = this.clone().apply { amount = i } // Create a new ItemStack with the desired amount
-    this.amount -= i // Shrink the current ItemStack by the split amount
-    return itemStack
-}
+fun ItemStack?.unwrap(): net.minecraft.world.item.ItemStack =
+    this?.let(CraftItemStack::unwrap) ?: net.minecraft.world.item.ItemStack.EMPTY

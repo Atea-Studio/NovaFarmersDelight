@@ -9,12 +9,14 @@ import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
-import fr.ateastudio.farmersdelight.util.split
+import fr.ateastudio.farmersdelight.util.replacePlaceholders
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
+import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.ResourceLocation
 import org.bukkit.Material
 import org.bukkit.SoundCategory
-import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -30,8 +32,9 @@ import xyz.xenondevs.invui.item.ItemProvider
 import xyz.xenondevs.invui.item.builder.ItemBuilder
 import xyz.xenondevs.invui.item.builder.setDisplayName
 import xyz.xenondevs.invui.item.impl.AbstractItem
-import xyz.xenondevs.nova.util.item.isEmpty
+import xyz.xenondevs.nova.util.item.novaItem
 import xyz.xenondevs.nova.util.item.toItemStack
+import xyz.xenondevs.nova.util.unwrap
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.block.tileentity.TileEntity
@@ -46,7 +49,6 @@ class CookingPot(
     state: NovaBlockState,
     data: Compound
 ) : TileEntity(pos, state, data) {
-    
     private val validContainer = listOf(Material.BOWL, Material.BUCKET, Material.GLASS_BOTTLE)
     
     private val ingredientsInventory = storedInventory("ingredients_inventory", 6, postUpdateHandler = ::validateRecipe)
@@ -54,7 +56,7 @@ class CookingPot(
     private val containerInventory = storedInventory("container_slot", 1, ::validateContainer, ::useContainer)
     private val outputInventory = storedInventory("output_slot", 1, ::preventOutputInput)
     
-    private var currentRecipe: CookingPotRecipe? by storedValue<ResourceLocation>("currentRecipe").mapNonNull(
+    private var currentRecipe: CookingPotRecipe? by storedValue<ResourceLocation>("currentRecipe", true).mapNonNull(
         { RecipeManager.getRecipe(RecipeTypes.COOKING_POT, it) },
         NovaRecipe::id
     )
@@ -69,6 +71,39 @@ class CookingPot(
         get() {
             return currentRecipe?.container ?: mealStorageInventory[0]?.getCraftingRemainingItem() ?: ItemStack.empty()
         }
+    
+    override fun getDrops(includeSelf: Boolean): List<ItemStack> {
+        val drop = super.getDrops(includeSelf)
+        if (!includeSelf) return drop
+        
+        val self = drop[0]
+        if (mealStorageInventory.isEmpty) {
+            val lore = Component.translatable("menu.farmersdelight.empty")
+                .color(NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false)
+            self.lore(listOf(lore))
+        }
+        else {
+            val storedStack = mealStorageInventory[0]!!
+            val placeholders = mapOf(
+                "amount" to "${storedStack.amount}",
+                "s" to if (storedStack.amount != 1) "s" else ""
+            )
+            val holdComponent = Component.translatable("menu.farmersdelight.hold_serving")
+                .replacePlaceholders(placeholders)
+                .color(NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false)
+                .decoration(TextDecoration.ITALIC, false)
+            val displayNameComponent = (storedStack.novaItem?.name ?: storedStack.displayName())
+                .color(NamedTextColor.WHITE)
+                .decoration(TextDecoration.ITALIC, false)
+            self.lore(listOf(holdComponent, displayNameComponent))
+            val damage = min(mealStorageInventory.getMaxSlotStackSize(0) - storedStack.amount, mealStorageInventory.getMaxSlotStackSize(0))
+            self.unwrap().set(DataComponents.MAX_DAMAGE, mealStorageInventory.getMaxSlotStackSize(0))
+            self.unwrap().set(DataComponents.DAMAGE, damage)
+        }
+        return drop
+    }
     
     private fun validateRecipe(event: ItemPostUpdateEvent) {
         val recipe = getMatchingRecipe(ingredientsInventory.items.toList())
@@ -101,8 +136,21 @@ class CookingPot(
         if (result == null || result.isEmpty) return  ItemStack.empty()
         val meta = result.clone().itemMeta
         meta.setMaxStackSize(mealStorageInventory.getMaxSlotStackSize(0))
-        result.clone().setItemMeta(meta)
-        return result
+        val newStack = result.clone()
+        newStack.setItemMeta(meta)
+        val container = currentRecipe?.container ?: ItemStack.empty()
+        if (!container.isEmpty) {
+            val servedOnComponent = Component.translatable("menu.farmersdelight.served_on")
+            val displayNameComponent = container.displayName()
+                .color(NamedTextColor.GRAY)
+            val lore = servedOnComponent
+                .append(Component.text(" "))
+                .append(displayNameComponent)
+                .color(NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false)
+            newStack.lore(listOf(lore))
+        }
+        return newStack
     }
     
     private fun isHeated(): Boolean { return blockState[BlockStateProperties.HEATED] == true}
@@ -159,7 +207,7 @@ class CookingPot(
         val outputStack = outputInventory[0] ?: ItemStack.empty()
         val result = currentRecipe?.result ?: ItemStack.empty()
         
-        val mealCount = min(mealStack.amount.toDouble(), (result.maxStackSize - outputStack.amount).toDouble()).toInt()
+        val mealCount = min(mealStack.amount, (result.maxStackSize - outputStack.amount))
         if (outputStack.isEmpty) {
             mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
             outputInventory.setItem(SELF_UPDATE_REASON,0, result.asQuantity(mealCount))
@@ -176,9 +224,9 @@ class CookingPot(
         val result = currentRecipe?.result ?: ItemStack.empty()
         
         if (isContainerValid(containerInputStack) && outputStack.amount < result.maxStackSize) {
-            val smallerStackCount = min(mealStack.amount.toDouble(), result.maxStackSize.toDouble()).toInt()
-            var mealCount = min(smallerStackCount.toDouble(), (result.maxStackSize - outputStack.amount).toDouble()).toInt()
-            mealCount = min(mealCount.toDouble(), containerInputStack.amount.toDouble()).toInt()
+            val smallerStackCount = min(mealStack.amount, result.maxStackSize)
+            var mealCount = min(smallerStackCount, (result.maxStackSize - outputStack.amount))
+            mealCount = min(mealCount, containerInputStack.amount)
             if (outputStack.isEmpty) {
                 mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
                 containerInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
@@ -272,6 +320,10 @@ class CookingPot(
     
     @TileEntityMenuClass
     private inner class CookingPotMenu : GlobalTileEntityMenu(GuiTextures.COOKING_POT) {
+        override fun getTitle(): Component {
+            return texture?.getTitle(Component.text("    ").append(block.name)) ?: Component.text("    ").append(block.name)
+        }
+        
         private inner class HeatedInfoItem : AbstractItem() {
             
             var heated: Boolean = false
