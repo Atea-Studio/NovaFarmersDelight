@@ -1,6 +1,6 @@
 {
   "parent": "farmersdelight:item/gui22px",
   "textures": {
-    "layer0": "farmersdelight:item/gui/arrow_progress_6"
+    "layer0": "farmersdelight:item/gui/progress/arrow/13"
   }
 }
