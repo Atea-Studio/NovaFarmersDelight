@@ -27,6 +27,7 @@ import xyz.xenondevs.nova.world.block.behavior.TileEntityDrops
 import xyz.xenondevs.nova.world.block.behavior.TileEntityInteractive
 import xyz.xenondevs.nova.world.block.behavior.TileEntityLimited
 import xyz.xenondevs.nova.world.block.sound.SoundGroup
+import xyz.xenondevs.nova.world.block.state.property.DefaultScopedBlockStateProperties.FACING_HORIZONTAL
 import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 import xyz.xenondevs.nova.world.item.tool.VanillaToolTiers
 
@@ -70,14 +71,14 @@ object Blocks : BlockRegistry by NovaFarmersDelight.registry {
             CookingPotBehavior
         )
         tickrate(1)
-        stateProperties(ScopedBlockStateProperties.SUPPORT, ScopedBlockStateProperties.HEATED)
+        stateProperties(FACING_HORIZONTAL, ScopedBlockStateProperties.SUPPORT, ScopedBlockStateProperties.HEATED)
         models {
             selectModel {
                 val support = getPropertyValueOrThrow(BlockStateProperties.SUPPORT)
                 when (support) {
-                    CookingPotSupport.HANDLE -> getModel("block/cooking_pot_handle")
-                    CookingPotSupport.TRAY -> getModel("block/cooking_pot_tray")
-                    else -> getModel("block/cooking_pot")
+                    CookingPotSupport.HANDLE -> getModel("block/cooking_pot_handle").rotated()
+                    CookingPotSupport.TRAY -> getModel("block/cooking_pot_tray").rotated()
+                    else -> getModel("block/cooking_pot").rotated()
                 }
             }
         }
