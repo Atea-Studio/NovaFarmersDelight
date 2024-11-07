@@ -12,11 +12,13 @@ import xyz.xenondevs.nova.world.item.NovaItem
 object GuiItems : ItemRegistry by NovaFarmersDelight.registry {
     val COOKING_POT_HEATED = guiItem("cooking_pot_heated")
     val BOWL_UNDERLAY = guiItem("bowl")
-    val ARROW_PROGRESS = item("arrow_progress") {
-        name(null)
+    val ARROW_PROGRESS = item("gui/opaque/progress/arrow") {
+        localizedName("")
         hidden(true)
+        
         models {
-            selectModels(0..22, "item/arrow_progress_%s")
+            itemType(Material.SHULKER_SHELL)
+            selectModels(0..22, "item/gui/progress/arrow/%s")
         }
     }
     
@@ -47,4 +49,17 @@ object GuiItems : ItemRegistry by NovaFarmersDelight.registry {
         } else localizedName(localizedName)
         hidden(true)
     }
+    
+    private fun progressItem(name: String, range: IntRange) = item("gui/opaque/$name") {
+        localizedName("")
+        hidden(true)
+        
+        models {
+            itemType(Material.SHULKER_SHELL)
+            selectModels(range, true) {
+                createGuiModel(background = true, stretched = false, "item/gui/$name/$it")
+            }
+        }
+    }
+    
 }

@@ -1,10 +1,7 @@
 package fr.ateastudio.farmersdelight.recipe
 
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
-import fr.ateastudio.farmersdelight.util.RecipeMatcher
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.item.crafting.CraftingInput
-import net.minecraft.world.level.Level
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.RecipeChoice
 import xyz.xenondevs.commons.collections.removeFirstWhere
@@ -25,7 +22,7 @@ class CookingPotRecipe(
         val choiceList = java.util.ArrayList(inputs)
         
         return container.filterNot { it.isEmpty }.all { matrixStack ->
-            choiceList.removeFirstWhere { it.test(matrixStack) }
+            choiceList.removeFirstWhere { (it as RecipeChoice.ExactChoice).test(matrixStack) }
         } && choiceList.isEmpty()
     }
 }

@@ -7,15 +7,14 @@ import fr.ateastudio.farmersdelight.registry.GuiItems
 import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
-import fr.ateastudio.farmersdelight.util.LogDebug
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.split
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.kyori.adventure.text.Component
 import net.minecraft.resources.ResourceLocation
 import org.bukkit.Material
 import org.bukkit.SoundCategory
+import org.bukkit.entity.Item
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -31,6 +30,7 @@ import xyz.xenondevs.invui.item.ItemProvider
 import xyz.xenondevs.invui.item.builder.ItemBuilder
 import xyz.xenondevs.invui.item.builder.setDisplayName
 import xyz.xenondevs.invui.item.impl.AbstractItem
+import xyz.xenondevs.nova.util.item.isEmpty
 import xyz.xenondevs.nova.util.item.toItemStack
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
@@ -49,36 +49,80 @@ class CookingPot(
     
     private val validContainer = listOf(Material.BOWL, Material.BUCKET, Material.GLASS_BOTTLE)
     
-    private val ingredientsInventory = storedInventory("ingredients_inventory", 6, false, preUpdateHandler = ::handleIngredientsInputInventoryUpdate)
-    private val mealDisplayInventory = storedInventory("meal_display_slot", 1, true, preUpdateHandler =  ::handleMealDisplayInventoryUpdate)
-    private val containerInventory = storedInventory("container_slot", 1, false, preUpdateHandler = ::handleContainerInventoryPreUpdate, postUpdateHandler = ::handleContainerInventoryPostUpdate)
-    private val outputInventory = storedInventory("output_slot", 1, false, preUpdateHandler = ::handleOutputInventoryUpdate)
+    private val ingredientsInventory = storedInventory("ingredients_inventory", 6, postUpdateHandler = ::validateRecipe)
+    private val mealStorageInventory = storedInventory("meal_display_slot", 1, true, IntArray(1) {99}, preUpdateHandler =  ::preventSteal)
+    private val containerInventory = storedInventory("container_slot", 1, ::validateContainer, ::useContainer)
+    private val outputInventory = storedInventory("output_slot", 1, ::preventOutputInput)
+    
+    private var currentRecipe: CookingPotRecipe? by storedValue<ResourceLocation>("currentRecipe").mapNonNull(
+        { RecipeManager.getRecipe(RecipeTypes.COOKING_POT, it) },
+        NovaRecipe::id
+    )
     
     private var cookTime = 0
-    private var cookTimeTotal = 0
+    private val cookTimeTotal: Int
+        get() {
+            return currentRecipe?.time ?: 0
+        }
     
-    private var mealContainerStack = ItemStack.empty()
+    private val mealContainerStack: ItemStack
+        get() {
+            return currentRecipe?.container ?: mealStorageInventory[0]?.getCraftingRemainingItem() ?: ItemStack.empty()
+        }
+    
+    private fun validateRecipe(event: ItemPostUpdateEvent) {
+        val recipe = getMatchingRecipe(ingredientsInventory.items.toList())
+        if (recipe != null && recipe != currentRecipe && canCook(recipe)) {
+            currentRecipe = recipe
+            cookTime = 0
+        }
+        
+    }
+    
+    private fun preventSteal(event: ItemPreUpdateEvent) {
+        event.isCancelled = event.updateReason != SELF_UPDATE_REASON
+    }
+    
+    private fun validateContainer(event: ItemPreUpdateEvent) {
+        if (event.updateReason != SELF_UPDATE_REASON && event.newItem != null && !validContainer.contains(event.newItem!!.type)) {
+            event.isCancelled = true
+        }
+    }
+    
+    private fun useContainer(event: ItemPostUpdateEvent) {
+        useStoredContainersOnMeal()
+    }
+    
+    private fun preventOutputInput(event: ItemPreUpdateEvent) {
+        event.isCancelled = !event.isRemove && event.updateReason != SELF_UPDATE_REASON
+    }
+    
+    private fun updateResult(result: ItemStack?): ItemStack {
+        if (result == null || result.isEmpty) return  ItemStack.empty()
+        val meta = result.clone().itemMeta
+        meta.setMaxStackSize(mealStorageInventory.getMaxSlotStackSize(0))
+        result.clone().setItemMeta(meta)
+        return result
+    }
     
     private fun isHeated(): Boolean { return blockState[BlockStateProperties.HEATED] == true}
     
     private fun hasInput(): Boolean {
-        LogDebug("hasInput")
         return !ingredientsInventory.isEmpty
     }
     
     private fun canCook(recipe: CookingPotRecipe): Boolean {
-        LogDebug("canCook")
         if (hasInput()) {
-            val resultStack = recipe.result
+            val resultStack = updateResult(recipe.result)
             if (resultStack.isEmpty) {
                 return false
             } else {
-                val storedMealStack = mealDisplayInventory[0] ?: ItemStack.empty()
+                val storedMealStack = mealStorageInventory[0] ?: ItemStack.empty()
                 return if (storedMealStack.isEmpty) {
                     true
-                } else if (storedMealStack.isSimilar(resultStack)) {
+                } else if (!storedMealStack.isSimilar(resultStack)) {
                     false
-                } else if (storedMealStack.amount + resultStack.amount <= mealDisplayInventory.getMaxSlotStackSize(0)) {
+                } else if (storedMealStack.amount + resultStack.amount <= mealStorageInventory.getMaxSlotStackSize(0)) {
                     true
                 } else {
                     return storedMealStack.amount + resultStack.amount <= resultStack.maxStackSize
@@ -90,107 +134,90 @@ class CookingPot(
     }
     
     private fun getMeal(): ItemStack {
-        LogDebug("getMeal")
-        return mealDisplayInventory[0] ?: ItemStack.empty()
+        return mealStorageInventory[0] ?: ItemStack.empty()
     }
     
-    
     private fun doesMealHaveContainer(meal: ItemStack): Boolean {
-        LogDebug("doesMealHaveContainer")
         return !mealContainerStack.isEmpty || meal.hasCraftingRemainingItem()
         
     }
     
     private fun isContainerValid(containerItem: ItemStack): Boolean {
-        LogDebug("isContainerValid")
         if (containerItem.isEmpty) return false
-        LogDebug("mealContainerStack: $mealContainerStack")
-        LogDebug("containerItem: $containerItem")
-        LogDebug("isContainerValid.similar: ${mealContainerStack.isSimilar(containerItem)}")
         if (!mealContainerStack.isEmpty) return mealContainerStack.isSimilar(containerItem)
-        LogDebug("isContainerValid3")
         return getMeal().isSimilar(containerItem)
     }
     
     private fun ejectIngredientRemainder(remainderStack: ItemStack) {
-        LogDebug("ejectIngredientRemainder")
         val location = pos.location.add(0.0, 0.7, 0.0)
         val itemEntity = pos.world.dropItem(location, remainderStack)
         itemEntity.velocity = Vector(0,1,0)
     }
     
     private fun moveMealToOutput() {
-        LogDebug("moveMealToOutput")
-        val mealStack = mealDisplayInventory[0] ?: ItemStack.empty()
+        val mealStack = mealStorageInventory[0] ?: ItemStack.empty()
         val outputStack = outputInventory[0] ?: ItemStack.empty()
-        val mealCount = min(mealStack.amount.toDouble(), (mealStack.maxStackSize - outputStack.amount).toDouble()).toInt()
+        val result = currentRecipe?.result ?: ItemStack.empty()
+        
+        val mealCount = min(mealStack.amount.toDouble(), (result.maxStackSize - outputStack.amount).toDouble()).toInt()
         if (outputStack.isEmpty) {
-            outputInventory.setItem(SELF_UPDATE_REASON,0,mealStack.split(mealCount))
-        } else if (outputStack.isSimilar(mealStack)) {
-            mealDisplayInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
+            mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
+            outputInventory.setItem(SELF_UPDATE_REASON,0, result.asQuantity(mealCount))
+        } else if (outputStack.isSimilar(result)) {
+            mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
             outputInventory.addItemAmount(SELF_UPDATE_REASON, 0, mealCount)
         }
     }
     
     private fun useStoredContainersOnMeal() {
-        LogDebug("useStoredContainersOnMeal")
-        val mealStack = mealDisplayInventory[0] ?: ItemStack.empty()
+        val mealStack = mealStorageInventory[0] ?: ItemStack.empty()
         val containerInputStack = containerInventory[0] ?: ItemStack.empty()
         val outputStack = outputInventory[0] ?: ItemStack.empty()
-        LogDebug("isContainerValid: ${isContainerValid(containerInputStack)}")
-        LogDebug("outputStack.amount: ${outputStack.amount}")
-        LogDebug("outputInventory.getMaxSlotStackSize(0): ${outputInventory.getMaxSlotStackSize(0)}")
+        val result = currentRecipe?.result ?: ItemStack.empty()
         
-        if (isContainerValid(containerInputStack) && outputStack.amount < outputInventory.getMaxSlotStackSize(0)) {
-            val smallerStackCount = min(mealStack.amount.toDouble(), containerInputStack.amount.toDouble()).toInt()
-            val mealCount = min(smallerStackCount.toDouble(), (mealStack.maxStackSize - outputStack.amount).toDouble()).toInt()
-            LogDebug("smallerStackCount: $smallerStackCount")
-            LogDebug("mealCount: $mealCount")
+        if (isContainerValid(containerInputStack) && outputStack.amount < result.maxStackSize) {
+            val smallerStackCount = min(mealStack.amount.toDouble(), result.maxStackSize.toDouble()).toInt()
+            var mealCount = min(smallerStackCount.toDouble(), (result.maxStackSize - outputStack.amount).toDouble()).toInt()
+            mealCount = min(mealCount.toDouble(), containerInputStack.amount.toDouble()).toInt()
             if (outputStack.isEmpty) {
-                LogDebug("empty")
+                mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
                 containerInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
-                outputInventory.setItem(SELF_UPDATE_REASON,0,mealStack.split(mealCount))
-            } else if (outputStack.isSimilar(mealStack)) {
-                LogDebug("mealStack")
-                mealDisplayInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
+                outputInventory.setItem(SELF_UPDATE_REASON,0, result.asQuantity(mealCount))
+            } else if (outputStack.isSimilar(result)) {
+                mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
                 containerInventory.addItemAmount(SELF_UPDATE_REASON, 0, -mealCount)
                 outputInventory.addItemAmount(SELF_UPDATE_REASON, 0, mealCount)
             }
-            LogDebug("END")
         }
     }
     
     private fun processCooking(recipe: CookingPotRecipe): Boolean {
-        LogDebug("processCooking")
-        
         ++cookTime
-        cookTimeTotal = recipe.time
         if (cookTime < cookTimeTotal) {
             return false
         }
         
         cookTime = 0
-        mealContainerStack = recipe.container
-        val resultStack = recipe.result
-        val storedMealStack = mealDisplayInventory[0] ?: ItemStack.empty()
+        val resultStack = updateResult(recipe.result)
+        val storedMealStack = mealStorageInventory[0] ?: ItemStack.empty()
         if (storedMealStack.isEmpty) {
-            mealDisplayInventory.setItem(SELF_UPDATE_REASON, 0, resultStack.clone())
+            mealStorageInventory.setItem(SELF_UPDATE_REASON, 0, updateResult(resultStack.clone()))
         } else if (storedMealStack.isSimilar(resultStack)) {
-            mealDisplayInventory.addItemAmount(SELF_UPDATE_REASON, 0, 1)
+            storedMealStack.amount++
+            mealStorageInventory.setItem(SELF_UPDATE_REASON, 0, updateResult(storedMealStack))
         }
         
-        for (i in 0..<mealDisplayInventory.size) {
-            val slotStack = mealDisplayInventory[i] ?: ItemStack.empty()
+        for (i in 0..<ingredientsInventory.size) {
+            val slotStack = ingredientsInventory[i] ?: ItemStack.empty()
             if (slotStack.hasCraftingRemainingItem()) {
                 ejectIngredientRemainder(slotStack.getCraftingRemainingItem())
             }
-            if (!slotStack.isEmpty) mealDisplayInventory.addItemAmount(SELF_UPDATE_REASON, 0, -1)
+            if (!slotStack.isEmpty) ingredientsInventory.addItemAmount(SELF_UPDATE_REASON, i, -1)
         }
         return true
     }
     
     private fun getMatchingRecipe(inputs: List<ItemStack?>): CookingPotRecipe? {
-        LogDebug("getMatchingRecipe")
         return RecipeManager.novaRecipes[RecipeTypes.COOKING_POT]?.values?.asSequence()
             ?.map { it as CookingPotRecipe }
             ?.firstOrNull { recipe ->
@@ -198,55 +225,20 @@ class CookingPot(
             }
     }
     
-    private fun handleIngredientsInputInventoryUpdate(event: ItemPreUpdateEvent) {
-        LogDebug("handleIngredientsInputInventoryUpdate")
-    
-    }
-    
-    private fun handleMealDisplayInventoryUpdate(event: ItemPreUpdateEvent) {
-        LogDebug("handleMealDisplayInventoryUpdate")
-        LogDebug("${event.updateReason}")
-        event.isCancelled = event.updateReason != SELF_UPDATE_REASON
-    }
-    
-    private fun handleContainerInventoryPreUpdate(event: ItemPreUpdateEvent) {
-        LogDebug("handleContainerInventoryPreUpdate")
-        if (event.updateReason != SELF_UPDATE_REASON && event.newItem != null && !validContainer.contains(event.newItem!!.type)) {
-            event.isCancelled = true
-        }
-    }
-    
-    private fun handleContainerInventoryPostUpdate(event: ItemPostUpdateEvent) {
-        LogDebug("handleContainerInventoryPostUpdate")
-
-    }
-    
-    private fun handleOutputInventoryUpdate(event: ItemPreUpdateEvent) {
-        LogDebug("handleOutputInventoryUpdate")
-        event.isCancelled = !event.isRemove && event.updateReason != SELF_UPDATE_REASON
-    }
-    
-    private var currentRecipe: CookingPotRecipe? by storedValue<ResourceLocation>("currentRecipe").mapNonNull(
-        { RecipeManager.getRecipe(RecipeTypes.COOKING_POT, it) },
-        NovaRecipe::id
-    )
-    
     override fun handleTick() {
-        LogDebug("handleTick")
         cookingTick()
         //animateTick()
     }
     
     private fun cookingTick() {
-        LogDebug("cookingTick")
         val isHeated = isHeated()
-        if (isHeated && hasInput()) {
-            val recipe = getMatchingRecipe(ingredientsInventory.items.toList())
-            if (recipe != null && canCook(recipe)) {
+        val recipe = currentRecipe
+        if (isHeated && hasInput() && recipe != null) {
+            if (canCook(recipe)) {
                 processCooking(recipe)
             }
             else {
-                cookTime = 0
+                --cookTime
             }
         }
         else if (cookTime > 0) {
@@ -256,11 +248,9 @@ class CookingPot(
         val mealStack = getMeal()
         if (!mealStack.isEmpty) {
             if (!doesMealHaveContainer(mealStack)) {
-                LogDebug("NO CONTAINER")
                 moveMealToOutput()
             }
             else if (!containerInventory.isEmpty) {
-                LogDebug("CONTAINER")
                 useStoredContainersOnMeal()
             }
         }
@@ -271,7 +261,6 @@ class CookingPot(
     
     
     private fun animateTick() {
-        LogDebug("animateTick")
         if (isHeated()) {
             val soundEffect = if (!getMeal().isEmpty) Sounds.BLOCK_COOKING_POT_BOIL_SOUP else Sounds.BLOCK_COOKING_POT_BOIL
             val location = pos.location.add(0.5, 0.0, 0.5)
@@ -316,7 +305,7 @@ class CookingPot(
             )
             .addIngredient('i', ingredientsInventory)
             .addIngredient('t', progressionInfoItem)
-            .addIngredient('p', mealDisplayInventory)
+            .addIngredient('p', mealStorageInventory)
             .addIngredient('f', heatedInfoItem)
             .addIngredient('b', containerInventory)
             .addIngredient('o', outputInventory)
