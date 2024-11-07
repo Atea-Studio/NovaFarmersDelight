@@ -2,12 +2,16 @@ package fr.ateastudio.farmersdelight.block.behavior
 
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.CookingPotSupport
+import fr.ateastudio.farmersdelight.registry.Tags
 import fr.ateastudio.farmersdelight.util.LogDebug
+import fr.ateastudio.farmersdelight.util.isTag
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
+import org.bukkit.block.data.type.Campfire
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockPlace
 import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
@@ -27,12 +31,19 @@ object CookingPotBehavior : BlockBehavior {
     }
     
     private fun updateHeated(pos: BlockPos, state: NovaBlockState) : Boolean {
-        return pos.below.block.type == Material.CAMPFIRE
+        if (pos.below.block.isTag(Tags.HEAT_SOURCE) || pos.below.block.isTag(Tags.TRAY_HEAT_SOURCE)) {
+            if (pos.below.block.type == Material.CAMPFIRE || pos.below.block.type == Material.SOUL_CAMPFIRE) {
+                val campFire = pos.below.block.blockData as Campfire
+                return campFire.isLit
+            }
+            return true
+        }
+        return false
     }
     
     private fun updateSupport(pos: BlockPos, state: NovaBlockState, blockFace: BlockFace? = null) : CookingPotSupport{
         val isSuspended = !pos.add(0,1,0).block.isEmpty
-        val isTray = pos.below.block.type == Material.CAMPFIRE
+        val isTray = pos.below.block.isTag(Tags.TRAY_HEAT_SOURCE)
         LogDebug("isSuspended: $isSuspended")
         LogDebug("isTray: $isTray")
         LogDebug("blockFace: $blockFace")

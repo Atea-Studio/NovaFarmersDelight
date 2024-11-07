@@ -51,5 +51,9 @@ fun ItemStack.hasCraftingRemainingItem(): Boolean {
         return !this.getCraftingRemainingItem().isEmpty
 }
 
+fun ItemStack.isTag(tag: List<Material>): Boolean {
+        return tag.contains(this.type)
+}
+
 fun ItemStack?.unwrap(): net.minecraft.world.item.ItemStack =
     this?.let(CraftItemStack::unwrap) ?: net.minecraft.world.item.ItemStack.EMPTY

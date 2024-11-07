@@ -275,7 +275,7 @@ class CookingPot(
     
     override fun handleTick() {
         cookingTick()
-        //animateTick()
+        animateTick()
     }
     
     private fun cookingTick() {
@@ -305,8 +305,6 @@ class CookingPot(
         
         menuContainer.forEachMenu(CookingPotMenu::updateProgress)
     }
-    
-    
     
     private fun animateTick() {
         if (isHeated()) {
