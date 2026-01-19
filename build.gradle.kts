@@ -3,7 +3,6 @@ version = "1.2.1"
 
 plugins {
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.paperweight)
     alias(libs.plugins.nova)
 }
 
@@ -14,7 +13,6 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(libs.versions.paper)
     implementation(libs.nova)
 }
 
@@ -32,4 +30,3 @@ addon {
     if (outDir is String)
         destination.set(File(outDir))
 }
-
