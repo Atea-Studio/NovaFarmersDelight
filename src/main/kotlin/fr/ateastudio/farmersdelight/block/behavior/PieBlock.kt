@@ -19,12 +19,13 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffectType
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockInteract
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils.breakBlockNaturally
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import kotlin.random.Random
@@ -39,23 +40,23 @@ abstract class PieBlock : BlockBehavior {
         return 4
     }
     
-    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockPlace>) {
+    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
         updateBlockState(pos, state.with(BlockStateProperties.BITES, 0))
     }
     
-    override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
+    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]
         if (player != null) {
-            val heldStack = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK] ?: ItemStack.empty()
+            val heldStack = ctx[BlockInteract.HELD_ITEM_STACK]
             if (heldStack.isKnife()) {
                 return cutSlice(pos, state, player)
             }
             
             if (consumeBite(pos, state, player)) {
-                return true
+                return InteractionResult.Pass
             }
         }
-        return false
+        return InteractionResult.Fail
     }
     
     private fun consumeBite(pos: BlockPos, state: NovaBlockState, player: Player): Boolean {
@@ -119,11 +120,11 @@ abstract class PieBlock : BlockBehavior {
         }
         else {
             pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, SoundCategory.PLAYERS, 0.8f, 0.8f)
-            val ctx = Context.intention(DefaultContextIntentions.BlockBreak)
-                .param(DefaultContextParamTypes.BLOCK_POS, pos)
-                .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)
-                .param(DefaultContextParamTypes.SOURCE_PLAYER, player)
-                .param(DefaultContextParamTypes.BLOCK_DROPS, true)
+            val ctx = Context.intention(BlockBreak)
+                .param(BlockBreak.BLOCK_POS, pos)
+                .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
+                .param(BlockBreak.SOURCE_PLAYER, player)
+                .param(BlockBreak.BLOCK_DROPS, true)
                 .build()
             breakBlockNaturally(ctx)
         }
@@ -131,21 +132,21 @@ abstract class PieBlock : BlockBehavior {
         return true
     }
     
-    private fun cutSlice(pos: BlockPos, state: NovaBlockState, player: Player): Boolean {
-        val bites = state[BlockStateProperties.BITES] ?: return false
+    private fun cutSlice(pos: BlockPos, state: NovaBlockState, player: Player): InteractionResult {
+        val bites = state[BlockStateProperties.BITES] ?: return InteractionResult.Fail
         if (bites < getMaxBites() - 1) {
             updateBlockState(pos, state.with(BlockStateProperties.BITES, bites + 1))
         }
         else {
             pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, SoundCategory.PLAYERS, 0.8f, 0.8f)
-            val ctx = Context.intention(DefaultContextIntentions.BlockBreak)
-                .param(DefaultContextParamTypes.BLOCK_POS, pos)
-                .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)
-                .param(DefaultContextParamTypes.SOURCE_PLAYER, player)
-                .param(DefaultContextParamTypes.BLOCK_DROPS, true)
+            val ctx = Context.intention(BlockBreak)
+                .param(BlockBreak.BLOCK_POS, pos)
+                .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
+                .param(BlockBreak.SOURCE_PLAYER, player)
+                .param(BlockBreak.BLOCK_DROPS, true)
                 .build()
             breakBlockNaturally(ctx)
-            return true
+            return InteractionResult.Pass
         }
         
         // Calculate item spawn position and motion
@@ -156,7 +157,7 @@ abstract class PieBlock : BlockBehavior {
         val zMotion = direction.direction.z * 0.15
         getPieSliceItem().spawnItemEntity(spawnLocation, xMotion, yMotion, zMotion)
         pos.world.playSound(pos.block.location, Sound.BLOCK_WOOL_BREAK, 0.8f, 0.8f)
-        return true
+        return InteractionResult.Pass
     }
     
     private fun randomTeleport(player: Player, diameter: Double) {

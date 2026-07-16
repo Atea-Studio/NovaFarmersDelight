@@ -38,14 +38,14 @@ import xyz.xenondevs.invui.item.AbstractItem
 import xyz.xenondevs.invui.item.ItemBuilder
 import xyz.xenondevs.invui.item.ItemProvider
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.util.item.novaItem
 import xyz.xenondevs.nova.util.runTask
 import xyz.xenondevs.nova.util.unwrap
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.block.tileentity.TileEntity
 import xyz.xenondevs.nova.world.block.tileentity.menu.TileEntityMenuClass
@@ -83,31 +83,28 @@ class CookingPot(
             return currentRecipe?.result?.getCraftingRemainingItem() ?: ItemStack.empty()
         }
     
-    override fun handleRightClick(ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        val clickItem = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK]
+    override fun use(ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]
+        val clickItem = ctx[BlockInteract.HELD_ITEM_STACK]
         val container = mealContainerStack
         if (player != null) {
             if (!player.isSneaking &&
                 !container.isEmpty &&
-                clickItem != null &&
                 container.isSimilar(clickItem) &&
                 !mealStorageInventory.isEmpty) {
                 mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -1)
                 clickItem.subtract()
                 player.safeGive(currentRecipe!!.result)
                 pos.world.playSound(pos.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f)
-                return true
+                return InteractionResult.Pass
             }
         }
-        return super.handleRightClick(ctx)
+        return super.use(ctx)
     }
     
-    override fun handleBreak(ctx: Context<DefaultContextIntentions.BlockBreak>) {
-        val pos = ctx[DefaultContextParamTypes.BLOCK_POS]
-        if (pos != null) {
-            rewardRecipeExperience(pos.block.center)
-        }
+    override fun handleBreak(ctx: Context<BlockBreak>) {
+        val pos = ctx[BlockBreak.BLOCK_POS]
+        rewardRecipeExperience(pos.block.center)
         super.handleBreak(ctx)
     }
     
@@ -291,7 +288,7 @@ class CookingPot(
                 } else if (storedMealStack.amount + resultStack.amount <= mealStorageInventory.getMaxSlotStackSize(0)) {
                     true
                 } else {
-                    return storedMealStack.amount + resultStack.amount <= resultStack.maxStackSize
+                    storedMealStack.amount + resultStack.amount <= resultStack.maxStackSize
                 }
             }
         } else {
@@ -449,7 +446,7 @@ class CookingPot(
         private val heatedInfoItem = HeatedInfoItem()
         private val progressionInfoItem = ProgressArrowItem()
         
-        override val gui = Gui.builder()
+        override val gui: Gui = Gui.builder()
             .setStructure(
                 ". i i i . t . p .",
                 ". i i i . . . . .",

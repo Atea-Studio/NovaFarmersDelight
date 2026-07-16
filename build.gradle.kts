@@ -1,9 +1,8 @@
 group = "fr.ateastudio.farmersdelight"
-version = "1.2.1"
+version = "1.4.0"
 
 plugins {
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.paperweight)
     alias(libs.plugins.nova)
 }
 
@@ -14,7 +13,6 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(libs.versions.paper)
     implementation(libs.nova)
 }
 

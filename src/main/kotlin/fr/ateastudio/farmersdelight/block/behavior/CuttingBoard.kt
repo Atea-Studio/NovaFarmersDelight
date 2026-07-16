@@ -17,12 +17,12 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.joml.Matrix4f
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockBreak
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.util.playSoundNearby
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
@@ -33,9 +33,9 @@ import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 
 object CuttingBoard : BlockBehavior {
     
-    override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        val tool = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK] ?: ItemStack.empty()
+    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]
+        val tool = ctx[BlockInteract.HELD_ITEM_STACK]
         val facing = state[DefaultBlockStateProperties.FACING]
         
         val existingDisplay = findItemDisplay(pos)
@@ -44,11 +44,11 @@ object CuttingBoard : BlockBehavior {
         if (existingDisplay != null) {
             if (tool.isEmpty) {
                 retrieveItem(pos, player)
-                return true
+                return InteractionResult.Pass
             }
             else if (player != null) {
                 doRecipe(pos, player, tool, facing)
-                return true
+                return InteractionResult.Pass
             }
         }
         else {
@@ -57,10 +57,10 @@ object CuttingBoard : BlockBehavior {
                 if (player != null && player.gameMode != GameMode.CREATIVE) {
                     tool.subtract()
                 }
-                return true
+                return InteractionResult.Pass
             }
         }
-        return false
+        return InteractionResult.Fail
         
     }
     

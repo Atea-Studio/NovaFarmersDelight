@@ -5,8 +5,8 @@ import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
@@ -19,18 +19,18 @@ abstract class WildcropBlock : BlockBehavior {
     open val dropProbability = 0.57
     abstract fun seedItem() : ItemStack?
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>): List<ItemStack> {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        val tool = ctx[DefaultContextParamTypes.TOOL_ITEM_STACK]
+    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+        val player = ctx[BlockBreak.SOURCE_PLAYER]
+        val tool = ctx[BlockBreak.TOOL_ITEM_STACK]
         val seedItem = seedItem()
-        if (!ctx[DefaultContextParamTypes.BLOCK_DROPS] || !canDropSeed || player?.gameMode == GameMode.CREATIVE) {
+        if (!ctx[BlockBreak.BLOCK_DROPS] || !canDropSeed || player?.gameMode == GameMode.CREATIVE) {
             return emptyList()
         }
         
         val result = mutableListOf<ItemStack>()
         if (seedItem is ItemStack) {
             // Determine the amount of drops, with possible modification from the Fortune enchantment
-            val fortuneLevel = tool?.getEnchantmentLevel(Enchantment.FORTUNE) ?: 0
+            val fortuneLevel = tool.getEnchantmentLevel(Enchantment.FORTUNE)
             val quantity = simulateBinomialDrops(fortuneLevel)
             result.add(seedItem.asQuantity(quantity))
         }
@@ -44,7 +44,7 @@ abstract class WildcropBlock : BlockBehavior {
         }
     }
     
-    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockPlace>): Boolean {
+    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
         return mayPlaceOn(pos.below, state) && pos.block.isEmpty
     }
     
@@ -75,9 +75,9 @@ abstract class WildcropBlock : BlockBehavior {
     }
     
     protected fun breakBlock(position: BlockPos){
-        val context = Context.intention(DefaultContextIntentions.BlockBreak)
-            .param(DefaultContextParamTypes.BLOCK_POS, position)
-            .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)
+        val context = Context.intention(BlockBreak)
+            .param(BlockBreak.BLOCK_POS, position)
+            .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
             .build()
         
         BlockUtils.breakBlockNaturally(context)
