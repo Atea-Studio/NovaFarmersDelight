@@ -3,7 +3,6 @@ package fr.ateastudio.farmersdelight.listener
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Items
-import fr.ateastudio.farmersdelight.util.Logger
 import fr.ateastudio.farmersdelight.util.isKnife
 import org.bukkit.Material
 import org.bukkit.block.data.Ageable
