@@ -1,0 +1,36 @@
+name: Build Addons
+
+on:
+  push:
+    branches:
+      - '**'
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: adopt
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle Executable
+        run: chmod +x gradlew
+
+      - name: Build Addons
+        run: ./gradlew addonJar -PoutDir=artifacts
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FarmersDelight
+          path: ./artifacts/*.jar

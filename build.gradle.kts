@@ -30,4 +30,3 @@ addon {
     if (outDir is String)
         destination.set(File(outDir))
 }
-
