@@ -2,7 +2,7 @@ package fr.ateastudio.farmersdelight.block.behavior
 
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockPlace
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior

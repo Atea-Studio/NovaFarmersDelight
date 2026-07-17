@@ -2,7 +2,7 @@ package fr.ateastudio.farmersdelight.block.behavior
 
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import org.bukkit.GameMode
-import org.bukkit.GameRule
+import org.bukkit.GameRules
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
@@ -14,12 +14,13 @@ import org.bukkit.entity.Ravager
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockInteract
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.item.NovaItem
@@ -34,20 +35,20 @@ abstract class CropBlock : BlockBehavior {
     protected open fun badResultItem() : NovaItem? = null
     abstract fun seedItem() : NovaItem?
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>): List<ItemStack> {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        val tool = ctx[DefaultContextParamTypes.TOOL_ITEM_STACK]
+    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+        val player = ctx[BlockBreak.SOURCE_PLAYER]
+        val tool = ctx[BlockBreak.TOOL_ITEM_STACK]
         val seedItem = seedItem()
         val resultItem = resultItem()
         val badResultItem = badResultItem()
-        if (!ctx[DefaultContextParamTypes.BLOCK_DROPS] || player?.gameMode == GameMode.CREATIVE) {
+        if (!ctx[BlockBreak.BLOCK_DROPS] || player?.gameMode == GameMode.CREATIVE) {
             return emptyList()
         }
         if (isMaxAge(state)) {
             val result = mutableListOf<ItemStack>()
             if (seedItem is NovaItem) {
                 // Determine the amount of drops, with possible modification from the Fortune enchantment
-                val fortuneLevel = tool?.getEnchantmentLevel(Enchantment.FORTUNE) ?: 0
+                val fortuneLevel = tool.getEnchantmentLevel(Enchantment.FORTUNE)
                 val quantity = simulateBinomialDrops(fortuneLevel)
                 result.add(seedItem.createItemStack(quantity))
             }
@@ -69,22 +70,22 @@ abstract class CropBlock : BlockBehavior {
         }
     }
     
-    override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        var itemStack = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK]
+    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]
+        var itemStack = player?.inventory?.itemInMainHand ?: ItemStack.empty()
         
-        if (player != null && itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+        if (player != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
                 if (itemStack.amount > 0) {
                     if (itemStack.amount > 1) {
                         itemStack.amount -= 1 // Reduce the amount by 1
                     } else {
                         // If there's only 1 item, set the slot to null (removes the item)
-                        itemStack = null
+                        itemStack = ItemStack.empty()
                     }
                 }
                 val inventory = player.inventory
-                val slot = ctx[DefaultContextParamTypes.INTERACTION_HAND]
+                val slot = ctx[BlockInteract.HELD_HAND]
                 when (slot) {
                     EquipmentSlot.HAND -> inventory.setItemInMainHand(itemStack)
                     EquipmentSlot.OFF_HAND -> inventory.setItemInOffHand(itemStack)
@@ -92,9 +93,9 @@ abstract class CropBlock : BlockBehavior {
                 }
             }
             performBoneMeal(pos, state)
-            return true
+            return InteractionResult.Pass
         }
-        return false
+        return InteractionResult.Fail
     }
     
     override fun ticksRandomly(state: NovaBlockState): Boolean {
@@ -109,7 +110,7 @@ abstract class CropBlock : BlockBehavior {
             val age = getAge(state)
             if (age < getMaxAge(state)) {
                 val growSpeed = getGrowthSpeed(pos)
-                val tickSpeedMultiplier = (pos.world.getGameRuleValue(GameRule.RANDOM_TICK_SPEED) ?: 3) / 3
+                val tickSpeedMultiplier = pos.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
                 repeat(tickSpeedMultiplier) {
                 if (Random.nextInt(((25.0F / growSpeed) + 1).toInt()) == 0) {
                         growCrop(pos, state)
@@ -129,12 +130,12 @@ abstract class CropBlock : BlockBehavior {
     }
     
     override fun handleEntityInside(pos: BlockPos, state: NovaBlockState, entity: Entity) {
-        if (entity is Ravager && pos.world.getGameRuleValue(GameRule.MOB_GRIEFING) == true) {
+        if (entity is Ravager && pos.world.getGameRuleValue(GameRules.MOB_GRIEFING) == true) {
             pos.block.breakNaturally()
         }
     }
     
-    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockPlace>): Boolean {
+    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
         return mayPlaceOn(pos.below, state) && pos.block.isEmpty
     }
     
@@ -288,9 +289,9 @@ abstract class CropBlock : BlockBehavior {
     }
     
     protected fun breakBlock(position: BlockPos){
-        val context = Context.intention(DefaultContextIntentions.BlockBreak)
-            .param(DefaultContextParamTypes.BLOCK_POS, position)
-            .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)
+        val context = Context.intention(BlockBreak)
+            .param(BlockBreak.BLOCK_POS, position)
+            .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
             .build()
         
         BlockUtils.breakBlockNaturally(context)

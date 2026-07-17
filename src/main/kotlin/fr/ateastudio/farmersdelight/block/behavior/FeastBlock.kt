@@ -12,15 +12,16 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockInteract
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.integration.customitems.CustomItemServiceManager.removeBlock
 import xyz.xenondevs.nova.util.BlockUtils.breakBlockNaturally
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.util.addToInventoryOrDrop
 import xyz.xenondevs.nova.util.item.toItemStack
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 
@@ -31,18 +32,18 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
     
     abstract fun getServingItem(state: NovaBlockState): ItemStack
     
-    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockPlace>) {
+    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
         updateBlockState(pos, state.with(BlockStateProperties.SERVINGS, maxServings))
     }
     
-    override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER] ?: return false
-        val hand = ctx[DefaultContextParamTypes.INTERACTION_HAND] ?: return false
+    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Fail
+        val hand = ctx[BlockInteract.HELD_HAND] ?: return InteractionResult.Fail
         return takeServing(pos, state, player, hand)
     }
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>): List<ItemStack> {
-        if (!ctx[DefaultContextParamTypes.BLOCK_DROPS] || ctx[DefaultContextParamTypes.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE) {
+    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+        if (!ctx[BlockBreak.BLOCK_DROPS] || ctx[BlockBreak.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE) {
             return emptyList()
         }
         
@@ -59,18 +60,18 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
         }
     }
     
-    private fun takeServing(pos: BlockPos, state: NovaBlockState, player: Player, hand: EquipmentSlot): Boolean {
+    private fun takeServing(pos: BlockPos, state: NovaBlockState, player: Player, hand: EquipmentSlot): InteractionResult {
         val servings = state[BlockStateProperties.SERVINGS] ?: 0
         if (servings == 0) {
             pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, SoundCategory.PLAYERS, 0.8f, 0.8f)
-            val ctx = Context.intention(DefaultContextIntentions.BlockBreak)
-                .param(DefaultContextParamTypes.BLOCK_POS, pos)
-                .param(DefaultContextParamTypes.BLOCK_BREAK_EFFECTS, true)
-                .param(DefaultContextParamTypes.SOURCE_PLAYER, player)
-                .param(DefaultContextParamTypes.BLOCK_DROPS, true)
+            val ctx = Context.intention(BlockBreak)
+                .param(BlockBreak.BLOCK_POS, pos)
+                .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
+                .param(BlockBreak.SOURCE_PLAYER, player)
+                .param(BlockBreak.BLOCK_DROPS, true)
                 .build()
             breakBlockNaturally(ctx)
-            return true
+            return InteractionResult.Pass
         }
         
         val serving = getServingItem(state)
@@ -88,12 +89,12 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
                     removeBlock(pos.block, false)
                 }
                 pos.world.playSound(pos.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, SoundCategory.BLOCKS, 1.0f, 1.0f)
-                return true
+                return InteractionResult.Pass
             } else {
                 player.sendMessage(Component.translatable("farmersdelight.block.feast.use_container", serving.getCraftingRemainingItem().effectiveName()))
             }
         }
-        return false
+        return InteractionResult.Fail
     }
     
 }

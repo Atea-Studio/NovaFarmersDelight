@@ -3,7 +3,7 @@ package fr.ateastudio.farmersdelight.block.behavior.crop
 import fr.ateastudio.farmersdelight.block.behavior.BerryBlock
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Items
-import org.bukkit.GameRule
+import org.bukkit.GameRules
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
@@ -17,7 +17,7 @@ object RiceCrop : BerryBlock() {
     override fun resultItem(): NovaItem? {
         return try {
             Items.RICE_PANICLE
-        } catch (e : Exception) {
+        } catch (_ : Exception) {
             null
         }
     }
@@ -25,7 +25,7 @@ object RiceCrop : BerryBlock() {
     override fun seedItem(): NovaItem? {
         return try {
             Items.RICE
-        } catch (e : Exception) {
+        } catch (_ : Exception) {
             null
         }
     }
@@ -43,8 +43,8 @@ object RiceCrop : BerryBlock() {
             val maxAge = getMaxAge(state)
             if (age < maxAge) {
                 val growSpeed = getGrowthSpeed(pos)
-                val tickSpeedMultiplier = (pos.world.getGameRuleValue(GameRule.RANDOM_TICK_SPEED) ?: 3) / 3
-                for (i in 1..tickSpeedMultiplier) {
+                val tickSpeedMultiplier = pos.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
+                (1..tickSpeedMultiplier).forEach { _ ->
                     if (Random.nextInt(((25.0F / growSpeed) + 1).toInt()) == 0) {
                         growCrop(pos, state)
                     }

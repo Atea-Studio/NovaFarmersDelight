@@ -7,11 +7,11 @@ import org.bukkit.SoundCategory
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockInteract
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.util.dropItems
 import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.state.NovaBlockState
 import xyz.xenondevs.nova.world.item.NovaItem
 import kotlin.random.Random
@@ -21,26 +21,26 @@ abstract class BerryBlock : CropBlock() {
     
     protected open val pickUpSound = "minecraft:block.sweet_berry_bush.pick_berries"
     
-    override fun handleInteract(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): Boolean {
-        val player = ctx[DefaultContextParamTypes.SOURCE_PLAYER]
-        var itemStack = ctx[DefaultContextParamTypes.INTERACTION_ITEM_STACK]
+    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]
+        var itemStack = player?.inventory?.itemInMainHand ?: ItemStack.empty()
         
         if (player != null) {
             if (isMaxAge(state)){
                 doDrop(pos)
                 updateBlockState(pos, getStateForAge(state, getBuddingAge(state) + 1))
             }
-            else if (itemStack != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+            else if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
                 if (player.gameMode != GameMode.CREATIVE) {
                     if (itemStack.amount > 0) {
                         if (itemStack.amount > 1) {
                             itemStack.amount -= 1 // Reduce the amount by 1
                         } else {
-                            itemStack = null
+                            itemStack = ItemStack.empty()
                         }
                     }
                     val inventory = player.inventory
-                    val slot = ctx[DefaultContextParamTypes.INTERACTION_HAND]
+                    val slot = ctx[BlockInteract.HELD_HAND]
                     when (slot) {
                         EquipmentSlot.HAND -> inventory.setItemInMainHand(itemStack)
                         EquipmentSlot.OFF_HAND -> inventory.setItemInOffHand(itemStack)
@@ -48,10 +48,10 @@ abstract class BerryBlock : CropBlock() {
                     }
                 }
                 performBoneMeal(pos, state)
-                return true
+                return InteractionResult.Pass
             }
         }
-        return false
+        return InteractionResult.Fail
     }
     
     override fun ticksRandomly(state: NovaBlockState): Boolean {

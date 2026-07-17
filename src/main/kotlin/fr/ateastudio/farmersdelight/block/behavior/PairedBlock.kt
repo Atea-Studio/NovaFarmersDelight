@@ -5,9 +5,8 @@ import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.util.relative
 import org.bukkit.block.BlockFace
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockPlace
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
@@ -18,12 +17,12 @@ import xyz.xenondevs.nova.world.format.WorldDataManager
 object PairedBlock : BlockBehavior {
     
     override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
-        val face = ctx[DefaultContextParamTypes.CLICKED_BLOCK_FACE]
+        val face = ctx[BlockPlace.CLICKED_BLOCK_FACE]
         val newState = getStateForPlacement(pos, face)
         updateBlockState(pos, newState)
     }
     
-    override fun handleBreak(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>) {
+    override fun handleBreak(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>) {
         val face = state[DefaultBlockStateProperties.FACING]
         val paired = state[BlockStateProperties.PAIRED]
         

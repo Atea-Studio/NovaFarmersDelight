@@ -12,8 +12,7 @@ import org.bukkit.inventory.meta.Damageable
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.potion.PotionType
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage
 import xyz.xenondevs.nova.util.BlockUtils
@@ -55,10 +54,10 @@ object MuddyFarmlandListener : Listener {
         }
         
         // Set up context and play sounds
-        val context = Context.intention(DefaultContextIntentions.BlockPlace)
-            .param(DefaultContextParamTypes.BLOCK_POS, block.pos)
-            .param(DefaultContextParamTypes.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
-            .param(DefaultContextParamTypes.BLOCK_PLACE_EFFECTS, true)
+        val context = Context.intention(BlockPlace)
+            .param(BlockPlace.BLOCK_POS, block.pos)
+            .param(BlockPlace.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
+            .param(BlockPlace.BLOCK_PLACE_EFFECTS, true)
             .build()
         block.location.playSoundNearby(Sound.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 1f, 1f)
         block.location.playSoundNearby(Sound.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS, 1f, 1f)
@@ -83,10 +82,10 @@ object MuddyFarmlandListener : Listener {
         player.swingHand(event.hand!!)
         
         // Set up context and play sounds
-        val context = Context.intention(DefaultContextIntentions.BlockPlace)
-            .param(DefaultContextParamTypes.BLOCK_POS, block.pos)
-            .param(DefaultContextParamTypes.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
-            .param(DefaultContextParamTypes.BLOCK_PLACE_EFFECTS, true)
+        val context = Context.intention(BlockPlace)
+            .param(BlockPlace.BLOCK_POS, block.pos)
+            .param(BlockPlace.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
+            .param(BlockPlace.BLOCK_PLACE_EFFECTS, true)
             .build()
         block.location.playSoundNearby(Sound.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1f, 1f)
         

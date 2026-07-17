@@ -3,7 +3,6 @@ package fr.ateastudio.farmersdelight.listener
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Items
-import fr.ateastudio.farmersdelight.util.Logger
 import fr.ateastudio.farmersdelight.util.isKnife
 import org.bukkit.Material
 import org.bukkit.block.data.Ageable
@@ -52,7 +51,6 @@ object StrawListener : Listener {
                         val novaBlockState = block.novaBlockState
                         val cropAge = novaBlockState?.get(BlockStateProperties.AGE) ?: return
                         val cropMaxAge = novaBlockState[BlockStateProperties.MAX_AGE] ?: return
-                        Logger.info("Crop age: $cropAge, Max age: $cropMaxAge")
                         if (cropAge < cropMaxAge) return
                         1.0
                     }

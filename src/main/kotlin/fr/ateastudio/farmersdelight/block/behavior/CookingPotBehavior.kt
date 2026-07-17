@@ -10,9 +10,8 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.type.Campfire
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions
-import xyz.xenondevs.nova.context.intention.DefaultContextIntentions.BlockPlace
-import xyz.xenondevs.nova.context.param.DefaultContextParamTypes
+import xyz.xenondevs.nova.context.intention.BlockBreak
+import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
 import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
@@ -21,7 +20,7 @@ import xyz.xenondevs.nova.world.block.state.NovaBlockState
 object CookingPotBehavior : BlockBehavior {
     
     override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
-        val blockFace = ctx[DefaultContextParamTypes.CLICKED_BLOCK_FACE]
+        val blockFace = ctx[BlockPlace.CLICKED_BLOCK_FACE]
         updateBlockState(pos, state.with(BlockStateProperties.SUPPORT, updateSupport(pos, blockFace))
             .with(BlockStateProperties.HEATED,updateHeated(pos)))
         
@@ -32,8 +31,8 @@ object CookingPotBehavior : BlockBehavior {
             .with(BlockStateProperties.HEATED,updateHeated(pos)))
     }
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<DefaultContextIntentions.BlockBreak>): List<ItemStack> {
-        if (!ctx[DefaultContextParamTypes.BLOCK_DROPS] || ctx[DefaultContextParamTypes.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE)
+    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+        if (!ctx[BlockBreak.BLOCK_DROPS] || ctx[BlockBreak.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE)
             return emptyList()
         return super.getDrops(pos, state, ctx)
     }

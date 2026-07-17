@@ -1,0 +1,24 @@
+{
+  "biomes": [
+    "minecraft:swamp",
+    "minecraft:mangrove_swamp",
+    "minecraft:jungle",
+    "minecraft:sparse_jungle",
+    "minecraft:bamboo_jungle"
+  ],
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "farmersdelight:patch_wild_rice"
+    ],
+    []
+  ]
+}
