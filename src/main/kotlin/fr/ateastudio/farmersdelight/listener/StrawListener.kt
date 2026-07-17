@@ -52,7 +52,6 @@ object StrawListener : Listener {
                         val novaBlockState = block.novaBlockState
                         val cropAge = novaBlockState?.get(BlockStateProperties.AGE) ?: return
                         val cropMaxAge = novaBlockState[BlockStateProperties.MAX_AGE] ?: return
-                        Logger.info("Crop age: $cropAge, Max age: $cropMaxAge")
                         if (cropAge < cropMaxAge) return
                         1.0
                     }
