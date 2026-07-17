@@ -3,7 +3,6 @@ package fr.ateastudio.farmersdelight.block.behavior
 import fr.ateastudio.farmersdelight.recipe.cuttingboard.CuttingBoardRecipe
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
-import fr.ateastudio.farmersdelight.util.Logger
 import fr.ateastudio.farmersdelight.util.random
 import fr.ateastudio.farmersdelight.util.safeGive
 import net.kyori.adventure.text.Component
@@ -16,7 +15,6 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.ItemDisplay
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.jline.utils.Log
 import org.joml.Matrix4f
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
@@ -41,30 +39,22 @@ object CuttingBoard : BlockBehavior {
         val facing = state[DefaultBlockStateProperties.FACING]
         val existingDisplay = findItemDisplay(pos)
         
-        Logger.info("CuttingBoard: use() called by player ${player?.name} with item ${tool?.type} at position $pos")
-        Logger.info("CuttingBoard: existingDisplay = $existingDisplay, facing = $facing")
-        
         // If an ItemDisplay already exists, return without spawning a new one
         if (existingDisplay != null) {
             if (tool.isEmpty) {
-                Logger.info("CuttingBoard: tool is empty")
                 retrieveItem(pos, player)
                 return InteractionResult.Pass
             }
             else if (player != null) {
-                Logger.info("CuttingBoard: tool is not empty, processing recipe with tool ${tool.type}")
                 doRecipe(pos, player, tool, facing)
                 return InteractionResult.Pass
             }
         }
         else {
-            Logger.info("CuttingBoard: no existing item display found")
             if (!tool.isEmpty) {
-                Logger.info("CuttingBoard: placing item on cutting board")
                 placeItem(tool.asOne(), pos, facing)
                 if (player != null && player.gameMode != GameMode.CREATIVE) {
                     tool.subtract()
-                    Logger.info("CuttingBoard: tool ${tool.type} used, new amount: ${tool.amount}")
                 }
                 return InteractionResult.Pass
             }
