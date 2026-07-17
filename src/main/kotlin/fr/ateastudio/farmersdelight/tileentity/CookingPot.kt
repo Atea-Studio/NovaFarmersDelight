@@ -7,6 +7,7 @@ import fr.ateastudio.farmersdelight.registry.GuiItems
 import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
+import fr.ateastudio.farmersdelight.util.Logger
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.safeGive
@@ -26,6 +27,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
+import org.jline.utils.Log
 import xyz.xenondevs.cbf.Compound
 import xyz.xenondevs.commons.provider.mapNonNull
 import xyz.xenondevs.invui.Click
@@ -85,7 +87,7 @@ class CookingPot(
     
     override fun use(ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
-        val clickItem = ctx[BlockInteract.HELD_ITEM_STACK]
+        val clickItem = player?.inventory?.itemInMainHand ?: ItemStack.empty()
         val container = mealContainerStack
         if (player != null) {
             if (!player.isSneaking &&

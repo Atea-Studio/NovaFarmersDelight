@@ -23,7 +23,7 @@ abstract class BerryBlock : CropBlock() {
     
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
-        var itemStack = ctx[BlockInteract.HELD_ITEM_STACK]
+        var itemStack = player?.inventory?.itemInMainHand ?: ItemStack.empty()
         
         if (player != null) {
             if (isMaxAge(state)){

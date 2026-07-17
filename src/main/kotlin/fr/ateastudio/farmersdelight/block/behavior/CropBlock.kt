@@ -72,7 +72,7 @@ abstract class CropBlock : BlockBehavior {
     
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
-        var itemStack = ctx[BlockInteract.HELD_ITEM_STACK]
+        var itemStack = player?.inventory?.itemInMainHand ?: ItemStack.empty()
         
         if (player != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {

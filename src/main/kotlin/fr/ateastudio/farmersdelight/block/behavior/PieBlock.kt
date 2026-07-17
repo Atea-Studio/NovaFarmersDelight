@@ -47,7 +47,7 @@ abstract class PieBlock : BlockBehavior {
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
         if (player != null) {
-            val heldStack = ctx[BlockInteract.HELD_ITEM_STACK]
+            val heldStack = player.inventory.itemInMainHand
             if (heldStack.isKnife()) {
                 return cutSlice(pos, state, player)
             }
