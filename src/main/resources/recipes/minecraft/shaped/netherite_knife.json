@@ -1,0 +1,13 @@
+{
+  "category": "equipment",
+  "result": "farmersdelight:netherite_knife",
+  "amount": 1,
+  "shape": [
+    "m",
+    "s"
+  ],
+  "ingredients": {
+    "m": "minecraft:netherite_ingot",
+    "s": "minecraft:stick"
+  }
+}

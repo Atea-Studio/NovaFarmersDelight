@@ -56,7 +56,7 @@ object MuddyFarmlandListener : Listener {
         // Set up context and play sounds
         val context = Context.intention(BlockPlace)
             .param(BlockPlace.BLOCK_POS, block.pos)
-            .param(BlockPlace.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
+            .param(BlockPlace.BLOCK_STATE_NOVA, Blocks.MUDDY_FARMLAND.defaultBlockState)
             .param(BlockPlace.BLOCK_PLACE_EFFECTS, true)
             .build()
         block.location.playSoundNearby(Sound.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 1f, 1f)
@@ -84,7 +84,7 @@ object MuddyFarmlandListener : Listener {
         // Set up context and play sounds
         val context = Context.intention(BlockPlace)
             .param(BlockPlace.BLOCK_POS, block.pos)
-            .param(BlockPlace.BLOCK_TYPE_NOVA, Blocks.MUDDY_FARMLAND)
+            .param(BlockPlace.BLOCK_STATE_NOVA, Blocks.MUDDY_FARMLAND.defaultBlockState)
             .param(BlockPlace.BLOCK_PLACE_EFFECTS, true)
             .build()
         block.location.playSoundNearby(Sound.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1f, 1f)
