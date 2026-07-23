@@ -5,6 +5,7 @@ import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
@@ -21,7 +22,6 @@ import xyz.xenondevs.nova.util.damageToolBreakBlock
 import xyz.xenondevs.nova.util.item.toItemStack
 import xyz.xenondevs.nova.util.playSoundNearby
 import xyz.xenondevs.nova.util.registerEvents
-import xyz.xenondevs.nova.util.runTask
 import xyz.xenondevs.nova.world.item.tool.ToolCategory
 import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 import xyz.xenondevs.nova.world.pos
@@ -33,7 +33,7 @@ object MuddyFarmlandListener : Listener {
         this.registerEvents()
     }
     
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     fun onUseWaterBottle(event: PlayerInteractEvent) {
         val player = event.player
         val block = event.clickedBlock
@@ -45,6 +45,8 @@ object MuddyFarmlandListener : Listener {
         // Check if the potion is a water bottle
         val potionMeta = tool.itemMeta as? PotionMeta ?: return
         if (potionMeta.basePotionType != PotionType.WATER) return
+        event.setUseInteractedBlock(Event.Result.DENY)
+        event.setUseItemInHand(Event.Result.DENY)
         
         player.swingHand(event.hand!!)
         if (player.gameMode != GameMode.CREATIVE) {
@@ -64,15 +66,22 @@ object MuddyFarmlandListener : Listener {
         BlockUtils.placeBlock(context)
     }
     
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     fun onUseHoe(event: PlayerInteractEvent) {
         val player = event.player
         val block = event.clickedBlock
         val tool = event.item
         val above = block?.above
         // Check if the clicked block is mud and the tool is a hoe
-        if (!event.action.isRightClick || block?.type != Material.MUD || tool?.isEmpty != false || !ToolCategory.ofItem(tool).contains(VanillaToolCategories.HOE)) return
+        if (
+            !event.action.isRightClick ||
+            block?.type != Material.MUD ||
+            tool?.isEmpty != false ||
+            !ToolCategory.ofItem(tool).contains(VanillaToolCategories.HOE)
+        ) return
         if (above?.isEmpty != true) return
+        event.setUseInteractedBlock(Event.Result.DENY)
+        event.setUseItemInHand(Event.Result.DENY)
         
         if (player.gameMode != GameMode.CREATIVE) {
             if (tool.itemMeta is Damageable) {
@@ -88,12 +97,8 @@ object MuddyFarmlandListener : Listener {
             .param(BlockPlace.BLOCK_PLACE_EFFECTS, true)
             .build()
         block.location.playSoundNearby(Sound.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1f, 1f)
-        
-        runTask {
-            if (block.type == Material.MUD) {
-                BlockUtils.placeBlock(context)
-            }
-        }
+
+        BlockUtils.placeBlock(context)
     }
     
 }
