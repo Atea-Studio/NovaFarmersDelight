@@ -71,21 +71,18 @@ abstract class CropBlock : BlockBehavior {
     }
     
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
-        val player = ctx[BlockInteract.SOURCE_PLAYER]
-        val slot = ctx[BlockInteract.HELD_HAND]
-        val inventory = player?.inventory
-        val itemStack = when (slot) {
-            EquipmentSlot.OFF_HAND -> inventory?.itemInOffHand
-            else -> inventory?.itemInMainHand
-        } ?: ItemStack.empty()
+        val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
         
-        if (player != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+        val slot = ctx[BlockInteract.HELD_HAND]
+        
+        val itemStack = when (slot) {
+            EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand
+            else -> player.inventory.itemInMainHand
+        }
+        
+        if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
-                when (slot) {
-                    EquipmentSlot.HAND -> player.inventory.itemInMainHand.subtract()
-                    EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand.subtract()
-                    else -> {}
-                }
+                itemStack.subtract()
             }
             performBoneMeal(pos, state)
             return InteractionResult.Success()

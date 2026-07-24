@@ -22,30 +22,25 @@ abstract class BerryBlock : CropBlock() {
     protected open val pickUpSound = "minecraft:block.sweet_berry_bush.pick_berries"
     
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
-        val player = ctx[BlockInteract.SOURCE_PLAYER]
-        val slot = ctx[BlockInteract.HELD_HAND]
-        val inventory = player?.inventory
-        val itemStack = when (slot) {
-            EquipmentSlot.OFF_HAND -> inventory?.itemInOffHand
-            else -> inventory?.itemInMainHand
-        } ?: ItemStack.empty()
+        val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
         
-        if (player != null) {
-            if (isMaxAge(state)){
-                doDrop(pos)
-                updateBlockState(pos, getStateForAge(state, getBuddingAge(state) + 1))
+        val slot = ctx[BlockInteract.HELD_HAND]
+        
+        val itemStack = when (slot) {
+            EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand
+            else -> player.inventory.itemInMainHand
+        }
+        
+        if (isMaxAge(state)){
+            doDrop(pos)
+            updateBlockState(pos, getStateForAge(state, getBuddingAge(state) + 1))
+        }
+        else if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+            if (player.gameMode != GameMode.CREATIVE) {
+                itemStack.subtract()
             }
-            else if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
-                if (player.gameMode != GameMode.CREATIVE) {
-                    when (slot) {
-                        EquipmentSlot.HAND -> player.inventory.itemInMainHand.subtract()
-                        EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand.subtract()
-                        else -> {}
-                    }
-                }
-                performBoneMeal(pos, state)
-                return InteractionResult.Success()
-            }
+            performBoneMeal(pos, state)
+            return InteractionResult.Success()
         }
         return InteractionResult.Fail
     }
