@@ -41,7 +41,7 @@ abstract class BerryBlock : CropBlock() {
                         itemStack.amount -= 1
                         itemStack
                     } else {
-                        null
+                        ItemStack.empty()
                     }
                     when (slot) {
                         EquipmentSlot.HAND -> player.inventory.setItemInMainHand(updatedStack)
