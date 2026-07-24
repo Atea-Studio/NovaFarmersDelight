@@ -72,23 +72,24 @@ abstract class CropBlock : BlockBehavior {
     
     override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
-        var itemStack = player?.inventory?.itemInMainHand ?: ItemStack.empty()
+        val slot = ctx[BlockInteract.HELD_HAND]
+        val inventory = player?.inventory
+        val itemStack = when (slot) {
+            EquipmentSlot.OFF_HAND -> inventory?.itemInOffHand
+            else -> inventory?.itemInMainHand
+        } ?: ItemStack.empty()
         
         if (player != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
-                if (itemStack.amount > 0) {
-                    if (itemStack.amount > 1) {
-                        itemStack.amount -= 1 // Reduce the amount by 1
-                    } else {
-                        // If there's only 1 item, set the slot to null (removes the item)
-                        itemStack = ItemStack.empty()
-                    }
+                val updatedStack = if (itemStack.amount > 1) {
+                    itemStack.amount -= 1
+                    itemStack
+                } else {
+                    null
                 }
-                val inventory = player.inventory
-                val slot = ctx[BlockInteract.HELD_HAND]
                 when (slot) {
-                    EquipmentSlot.HAND -> inventory.setItemInMainHand(itemStack)
-                    EquipmentSlot.OFF_HAND -> inventory.setItemInOffHand(itemStack)
+                    EquipmentSlot.HAND -> player.inventory.setItemInMainHand(updatedStack)
+                    EquipmentSlot.OFF_HAND -> player.inventory.setItemInOffHand(updatedStack)
                     else -> {}
                 }
             }
