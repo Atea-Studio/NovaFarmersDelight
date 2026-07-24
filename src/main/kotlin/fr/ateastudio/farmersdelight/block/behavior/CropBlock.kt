@@ -81,20 +81,14 @@ abstract class CropBlock : BlockBehavior {
         
         if (player != null && itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
-                val updatedStack = if (itemStack.amount > 1) {
-                    itemStack.amount -= 1
-                    itemStack
-                } else {
-                    ItemStack.empty()
-                }
                 when (slot) {
-                    EquipmentSlot.HAND -> player.inventory.setItemInMainHand(updatedStack)
-                    EquipmentSlot.OFF_HAND -> player.inventory.setItemInOffHand(updatedStack)
+                    EquipmentSlot.HAND -> player.inventory.itemInMainHand.subtract()
+                    EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand.subtract()
                     else -> {}
                 }
             }
             performBoneMeal(pos, state)
-            return InteractionResult.Pass
+            return InteractionResult.Success()
         }
         return InteractionResult.Fail
     }

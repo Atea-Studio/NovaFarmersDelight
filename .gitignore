@@ -32,3 +32,4 @@ build/
 # Logs
 logs/
 *.log
+/src/main/resources/assets/textures/waila/
