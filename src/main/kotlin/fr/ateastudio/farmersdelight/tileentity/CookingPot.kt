@@ -109,7 +109,7 @@ class CookingPot(
     }
     
     override fun getDrops(includeSelf: Boolean): List<ItemStack> {
-        val drop = super.getDrops(includeSelf)
+        val drop = createDropsWithoutStoredXp(includeSelf)
         if (!includeSelf) return drop
         
         val self = drop[0]
@@ -142,6 +142,16 @@ class CookingPot(
             self.unwrap().set(DataComponents.DAMAGE, damage)
         }
         return drop
+    }
+
+    private fun createDropsWithoutStoredXp(includeSelf: Boolean): List<ItemStack> {
+        val previousStoredXp = storedXp
+        storedXp = 0.0f
+        return try {
+            super.getDrops(includeSelf)
+        } finally {
+            storedXp = previousStoredXp
+        }
     }
     
     override fun handleTick() {
