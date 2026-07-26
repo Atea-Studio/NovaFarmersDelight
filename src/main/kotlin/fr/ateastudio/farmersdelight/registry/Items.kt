@@ -135,7 +135,15 @@ object Items {
     
     val CABBAGE = registerItem("cabbage", Consumable())
     val TOMATO = registerItem("tomato", Consumable())
-    val ONION = registerItem("onion", Consumable())
+    val ONION = item(Blocks.ONION_CROP, "onion") {
+        name(Component.translatable("item.farmersdelight.onion"))
+        behaviors(Consumable())
+        modelDefinition {
+            model = buildModel {
+                createLayeredModel("item/onion")
+            }
+        }
+    }
     val RICE_PANICLE = registerItem("rice_panicle")
     val RICE = item(Blocks.RICE_CROP, "rice") {
         name(Component.translatable("item.farmersdelight.rice"))
