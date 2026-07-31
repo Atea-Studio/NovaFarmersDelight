@@ -9,6 +9,6 @@ consume_time: 40
 # The item stack that remains after the food is consumed.
 remains: "minecraft:glass_bottle"
 animation: "drink"
-sound: "minecraft:entity.generic.drink"
+sound: "entity.generic.drink"
 # A list of effects to apply to the player when this food is consumed.
 possible_effects: []
