@@ -42,6 +42,12 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
         return takeServing(pos, state, player, hand)
     }
     
+    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Fail
+        val hand = ctx[BlockInteract.HELD_HAND] ?: return InteractionResult.Fail
+        return takeServing(pos, state, player, hand)
+    }
+    
     override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         if (!ctx[BlockBreak.BLOCK_DROPS] || ctx[BlockBreak.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE) {
             return emptyList()
@@ -71,12 +77,11 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
                 .param(BlockBreak.BLOCK_DROPS, true)
                 .build()
             breakBlockNaturally(ctx)
-            return InteractionResult.Pass
+            return InteractionResult.Success()
         }
         
         val serving = getServingItem(state)
         val heldStack = player.inventory.getItem(hand)
-        
         if (servings > 0) {
             if (!serving.hasCraftingRemainingItem() || heldStack.isSimilar(serving.getCraftingRemainingItem())) {
                 updateBlockState(pos, state.with(BlockStateProperties.SERVINGS, servings - 1))
@@ -89,12 +94,12 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
                     removeBlock(pos.block, false)
                 }
                 pos.world.playSound(pos.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, SoundCategory.BLOCKS, 1.0f, 1.0f)
-                return InteractionResult.Pass
+                return InteractionResult.Success()
             } else {
                 player.sendMessage(Component.translatable("farmersdelight.block.feast.use_container", serving.getCraftingRemainingItem().effectiveName()))
             }
         }
-        return InteractionResult.Fail
+        return InteractionResult.Pass
     }
     
 }

@@ -14,6 +14,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.ItemDisplay
 import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.joml.Matrix4f
 import xyz.xenondevs.nova.context.Context
@@ -33,9 +34,10 @@ import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 
 object CuttingBoard : BlockBehavior {
     
-    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
-        val player = ctx[BlockInteract.SOURCE_PLAYER]
-        val tool = player?.inventory?.itemInMainHand ?: ItemStack.empty()
+    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
+        val hand = ctx[BlockInteract.HELD_HAND]
+        val tool = if (hand == EquipmentSlot.HAND) player.inventory.itemInMainHand else player.inventory.itemInOffHand
         val facing = state[DefaultBlockStateProperties.FACING]
         val existingDisplay = findItemDisplay(pos)
         
@@ -43,23 +45,23 @@ object CuttingBoard : BlockBehavior {
         if (existingDisplay != null) {
             if (tool.isEmpty) {
                 retrieveItem(pos, player)
-                return InteractionResult.Pass
+                return InteractionResult.Success()
             }
-            else if (player != null) {
+            else {
                 doRecipe(pos, player, tool, facing)
-                return InteractionResult.Pass
+                return InteractionResult.Success()
             }
         }
         else {
             if (!tool.isEmpty) {
                 placeItem(tool.asOne(), pos, facing)
-                if (player != null && player.gameMode != GameMode.CREATIVE) {
+                if (player.gameMode != GameMode.CREATIVE) {
                     tool.subtract()
                 }
-                return InteractionResult.Pass
+                return InteractionResult.Success()
             }
         }
-        return InteractionResult.Fail
+        return InteractionResult.Pass
         
     }
     

@@ -1,14 +1,17 @@
 package fr.ateastudio.farmersdelight.tileentity
 
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
+import fr.ateastudio.farmersdelight.block.CookingPotSupport
 import fr.ateastudio.farmersdelight.gui.ProgressArrowItem
 import fr.ateastudio.farmersdelight.recipe.cookingpot.CookingPotRecipe
 import fr.ateastudio.farmersdelight.registry.GuiItems
 import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
+import fr.ateastudio.farmersdelight.registry.Tags
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
+import fr.ateastudio.farmersdelight.util.isTag
 import fr.ateastudio.farmersdelight.util.safeGive
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
@@ -21,9 +24,11 @@ import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.block.BlockFace
 import org.bukkit.entity.ExperienceOrb
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
 import xyz.xenondevs.cbf.Compound
@@ -40,6 +45,7 @@ import xyz.xenondevs.invui.item.ItemProvider
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
+import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.util.item.novaItem
 import xyz.xenondevs.nova.util.runTask
@@ -54,6 +60,7 @@ import xyz.xenondevs.nova.world.item.recipe.RecipeManager
 import kotlin.math.min
 import kotlin.random.Random
 
+private const val CLICK_COOLDOWN_TIME: Long = 100
 
 class CookingPot(
     pos: BlockPos,
@@ -83,23 +90,97 @@ class CookingPot(
             return currentRecipe?.result?.getCraftingRemainingItem() ?: ItemStack.empty()
         }
     
-    override fun use(ctx: Context<BlockInteract>): InteractionResult {
-        val player = ctx[BlockInteract.SOURCE_PLAYER]
-        val clickItem = player?.inventory?.itemInMainHand ?: ItemStack.empty()
+    override fun useItemOn(ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]  ?: return InteractionResult.Pass
+        val hand = ctx[BlockInteract.HELD_HAND]
+        val clickItem = if (hand == EquipmentSlot.HAND) player.inventory.itemInMainHand else player.inventory.itemInOffHand
         val container = mealContainerStack
-        if (player != null) {
-            if (!player.isSneaking &&
-                !container.isEmpty &&
-                container.isSimilar(clickItem) &&
-                !mealStorageInventory.isEmpty) {
-                mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -1)
-                clickItem.subtract()
-                player.safeGive(currentRecipe!!.result)
-                pos.world.playSound(pos.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f)
-                return InteractionResult.Pass
+        if (!container.isEmpty &&
+            container.isSimilar(clickItem) &&
+            !mealStorageInventory.isEmpty) {
+            mealStorageInventory.addItemAmount(SELF_UPDATE_REASON, 0, -1)
+            clickItem.subtract()
+            player.safeGive(currentRecipe!!.result)
+            pos.world.playSound(pos.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.0f)
+            return InteractionResult.Success()
+        }
+        return InteractionResult.Pass
+    }
+    
+    override fun use(ctx: Context<BlockInteract>): InteractionResult {
+        val player = ctx[BlockInteract.SOURCE_PLAYER]  ?: return InteractionResult.Pass
+        val pos = ctx[BlockInteract.BLOCK_POS]
+        
+        if (!player.isSneaking) {
+            return super.use(ctx)
+        }
+        
+        if (!canClick((pos.location))) return InteractionResult.Fail
+        val state = pos.novaBlockState
+        if (state != null) {
+            val isHandle = state[BlockStateProperties.SUPPORT] == CookingPotSupport.HANDLE
+            val default = updateSupport(pos)
+            if (isHandle) {
+                if (default != CookingPotSupport.HANDLE) {
+                    BlockUtils.updateBlockState(pos, state.with(BlockStateProperties.SUPPORT, default))
+                }
+                else if (pos.below.block.isTag(Tags.TRAY_HEAT_SOURCE)) {
+                    BlockUtils.updateBlockState(pos, state.with(BlockStateProperties.SUPPORT, CookingPotSupport.TRAY))
+                }
+                else {
+                    BlockUtils.updateBlockState(pos, state.with(BlockStateProperties.SUPPORT, CookingPotSupport.NONE))
+                }
             }
+            else {
+                BlockUtils.updateBlockState(pos, state.with(BlockStateProperties.SUPPORT, CookingPotSupport.HANDLE))
+            }
+            pos.world.playSound(pos.location, Sound.BLOCK_LANTERN_PLACE, SoundCategory.BLOCKS, 0.8f, 1f)
+            return InteractionResult.Success()
         }
         return super.use(ctx)
+    }
+    
+    private fun updateSupport(pos: BlockPos, blockFace: BlockFace? = null) : CookingPotSupport{
+        val isSuspended = !pos.add(0,1,0).block.isEmpty
+        val isTray = pos.below.block.isTag(Tags.TRAY_HEAT_SOURCE)
+        
+        if (isSuspended && isTray && blockFace != null) {
+            return if (blockFace == BlockFace.DOWN) {
+                CookingPotSupport.HANDLE
+            } else {
+                CookingPotSupport.TRAY
+            }
+        }
+        else if (isSuspended) {
+            return CookingPotSupport.HANDLE
+        }
+        else if (isTray) {
+            return CookingPotSupport.TRAY
+        }
+        else {
+            return CookingPotSupport.NONE
+        }
+    }
+    
+    private fun canClick(location: Location) : Boolean {
+        val currentTime = System.currentTimeMillis()
+        
+        // Remove expired entries (older than 1 second)
+        removeExpiredEntries(currentTime)
+        
+        // Check if the location is in the map and if it is still within the cooldown period
+        return if (clickMap.containsKey(location)) {
+            val lastClickTime = clickMap[location]!!
+            if (currentTime - lastClickTime < CLICK_COOLDOWN_TIME) {
+                false
+            } else {
+                clickMap.remove(location)
+                true
+            }
+        } else {
+            clickMap[location] = currentTime
+            true
+        }
     }
     
     override fun handleBreak(ctx: Context<BlockBreak>) {
@@ -479,6 +560,17 @@ class CookingPot(
             heatedInfoItem.heated = isHeated()
         }
         
+    }
+    
+    private val clickMap: MutableMap<Location, Long> = mutableMapOf()
+    private fun removeExpiredEntries(currentTime: Long) {
+        val iterator = clickMap.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (currentTime - entry.value > CLICK_COOLDOWN_TIME) {
+                iterator.remove() // Remove expired entry
+            }
+        }
     }
     
 }

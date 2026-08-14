@@ -70,15 +70,10 @@ abstract class CropBlock : BlockBehavior {
         }
     }
     
-    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
-        
-        val slot = ctx[BlockInteract.HELD_HAND]
-        
-        val itemStack = when (slot) {
-            EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand
-            else -> player.inventory.itemInMainHand
-        }
+        val hand = ctx[BlockInteract.HELD_HAND]
+        val itemStack = if (hand == EquipmentSlot.HAND) player.inventory.itemInMainHand else player.inventory.itemInOffHand
         
         if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
@@ -87,7 +82,7 @@ abstract class CropBlock : BlockBehavior {
             performBoneMeal(pos, state)
             return InteractionResult.Success()
         }
-        return InteractionResult.Fail
+        return InteractionResult.Pass
     }
     
     override fun ticksRandomly(state: NovaBlockState): Boolean {

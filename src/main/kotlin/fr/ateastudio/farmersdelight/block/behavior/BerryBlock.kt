@@ -21,15 +21,11 @@ abstract class BerryBlock : CropBlock() {
     
     protected open val pickUpSound = "minecraft:block.sweet_berry_bush.pick_berries"
     
-    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
+        val hand = ctx[BlockInteract.HELD_HAND]
+        val itemStack = if (hand == EquipmentSlot.HAND) player.inventory.itemInMainHand else player.inventory.itemInOffHand
         
-        val slot = ctx[BlockInteract.HELD_HAND]
-        
-        val itemStack = when (slot) {
-            EquipmentSlot.OFF_HAND -> player.inventory.itemInOffHand
-            else -> player.inventory.itemInMainHand
-        }
         
         if (isMaxAge(state)){
             doDrop(pos)
@@ -42,7 +38,7 @@ abstract class BerryBlock : CropBlock() {
             performBoneMeal(pos, state)
             return InteractionResult.Success()
         }
-        return InteractionResult.Fail
+        return InteractionResult.Pass
     }
     
     override fun ticksRandomly(state: NovaBlockState): Boolean {
