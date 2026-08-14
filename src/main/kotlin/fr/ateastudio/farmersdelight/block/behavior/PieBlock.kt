@@ -44,19 +44,19 @@ abstract class PieBlock : BlockBehavior {
         updateBlockState(pos, state.with(BlockStateProperties.BITES, 0))
     }
     
-    override fun use(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
         if (player != null) {
-            val heldStack = player.inventory.itemInMainHand
+            val heldStack = ctx[BlockInteract.HELD_ITEM_STACK]
             if (heldStack.isKnife()) {
                 return cutSlice(pos, state, player)
             }
             
             if (consumeBite(pos, state, player)) {
-                return InteractionResult.Pass
+                return InteractionResult.Success()
             }
         }
-        return InteractionResult.Fail
+        return InteractionResult.Pass
     }
     
     private fun consumeBite(pos: BlockPos, state: NovaBlockState, player: Player): Boolean {
@@ -146,7 +146,7 @@ abstract class PieBlock : BlockBehavior {
                 .param(BlockBreak.BLOCK_DROPS, true)
                 .build()
             breakBlockNaturally(ctx)
-            return InteractionResult.Pass
+            return InteractionResult.Success()
         }
         
         // Calculate item spawn position and motion
@@ -157,7 +157,7 @@ abstract class PieBlock : BlockBehavior {
         val zMotion = direction.direction.z * 0.15
         getPieSliceItem().spawnItemEntity(spawnLocation, xMotion, yMotion, zMotion)
         pos.world.playSound(pos.block.location, Sound.BLOCK_WOOL_BREAK, 0.8f, 0.8f)
-        return InteractionResult.Pass
+        return InteractionResult.Success()
     }
     
     private fun randomTeleport(player: Player, diameter: Double) {

@@ -29,7 +29,7 @@ object RiceRollMedleyBlock : FeastBlock(true) {
         val map = riceRollServings.value
         return try {
             map[servings - 1].createItemStack()
-        } catch (e : Exception) {
+        } catch (_ : Exception) {
             ItemStack.empty()
         }
     }
