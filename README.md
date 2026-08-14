@@ -27,6 +27,9 @@ Whether you're running a survival server, an RPG world, or just want to enhance 
 - 🛠 **New Tools & Equipment** – Scavenge, prepare, and store food efficiently.
 - 🏡 **Decorative Elements** – Customize kitchens, farms, and more.
 
+<img width="534" height="1326" alt="image" src="https://github.com/user-attachments/assets/73249fce-c7af-4904-b132-7fa621c5a430" />
+
+
 ## Installation
 1. **Ensure you have PaperMC** installed on your server.
 2. [**Download the latest release of the addon**](https://github.com/Atea-Studio/NovaFarmersDelight/releases)
