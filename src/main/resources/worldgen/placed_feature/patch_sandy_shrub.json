@@ -6,16 +6,21 @@
       "count": 32
     },
     {
-      "type": "minecraft:random_offset",
-      "xz_spread": {
+      "type": "minecraft:offset",
+      "x": {
         "type": "minecraft:uniform",
         "min_inclusive": -2,
         "max_inclusive": 2
       },
-      "y_spread": {
+      "y": {
         "type": "minecraft:uniform",
         "min_inclusive": -3,
         "max_inclusive": 3
+      },
+      "z": {
+        "type": "minecraft:uniform",
+        "min_inclusive": -2,
+        "max_inclusive": 2
       }
     },
     {

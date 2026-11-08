@@ -16,4 +16,4 @@ possible_effects:
     ambient: true
     particles: true
     icon: true
-    probability: 0.3
+    probability: 1.0

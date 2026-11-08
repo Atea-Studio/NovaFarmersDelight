@@ -1,6 +1,5 @@
 package fr.ateastudio.farmersdelight.recipe.cuttingboard
 
-import xyz.xenondevs.nova.world.item.tool.ToolCategory
 import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 
 enum class ToolTag {
@@ -9,15 +8,11 @@ enum class ToolTag {
     OTHER;
     
     companion object {
-        fun fromString(value: String): ToolTag {
-            // Split the input string by ':', then take the part after the ':'
-            val rightPart = value.split(":").getOrNull(1)?.split("/")?.getOrNull(1) ?: return OTHER
-            
-            return when (rightPart) {
-                "shears" -> SHEARS
-                "knives" -> KNIVES
-                else -> OTHER
-            }
+        /** Recipe tool tags: the standard common tags, plus the legacy Forge ids older recipe files used. */
+        fun fromString(value: String): ToolTag = when (value) {
+            "c:tools/knife", "forge:tools/knives" -> KNIVES
+            "c:tools/shear", "forge:shears", "forge:tools/shears" -> SHEARS
+            else -> OTHER
         }
     }
 }
@@ -35,7 +30,7 @@ enum class ToolType {
     }
 }
 
-enum class ToolAction(val actionName: String, val toolCategory: ToolCategory?) {
+enum class ToolAction(val actionName: String, val toolCategory: net.kyori.adventure.key.Key?) {
     // Axes
     AXE_DIG("axe_dig", VanillaToolCategories.AXE),
     AXE_STRIP("axe_strip", VanillaToolCategories.AXE),

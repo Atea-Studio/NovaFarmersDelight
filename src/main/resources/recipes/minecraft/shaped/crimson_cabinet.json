@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:crimson_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:crimson_slab",
+    "d": "minecraft:crimson_trapdoor"
+  }
+}

@@ -1,13 +1,11 @@
 package fr.ateastudio.farmersdelight.registry
 
-import fr.ateastudio.farmersdelight.NovaFarmersDelight.registerToolTier
-import xyz.xenondevs.nova.initialize.Init
-import xyz.xenondevs.nova.initialize.InitStage
+import net.kyori.adventure.key.Key
 
+// Custom tool tiers are no longer registered types in Nova 0.25; they are identified
+// by a Key referencing a corresponding "incorrect_for_<tier>_tool" block tag (see the
+// migration guide's "Custom Tool Tiers" section).
 @Suppress("unused")
-@Init(stage = InitStage.PRE_PACK)
 object ToolTiers {
-    
-    val FLINT = registerToolTier("flint")
-    
+    val FLINT: Key = Key.key("farmersdelight", "flint")
 }

@@ -2,61 +2,57 @@ package fr.ateastudio.farmersdelight.block.behavior
 
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.registry.Blocks
-import fr.ateastudio.farmersdelight.util.relative
+import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockPlace
-import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
-import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockType
+import xyz.xenondevs.nova.world.block.novaBlockState
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
-import xyz.xenondevs.nova.world.format.WorldDataManager
 
 object PairedBlock : BlockBehavior {
     
-    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
+    override fun handlePlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
         val face = ctx[BlockPlace.CLICKED_BLOCK_FACE]
-        val newState = getStateForPlacement(pos, face)
-        updateBlockState(pos, newState)
+        pos.blockData = getStateForPlacement(pos, face)
     }
     
-    override fun handleBreak(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>) {
-        val face = state[DefaultBlockStateProperties.FACING]
+    override fun handleBreak(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>) {
+        val face = state[DefaultBlockStateProperties.FACING_CARTESIAN]
         val paired = state[BlockStateProperties.PAIRED]
         
         if (face != null && paired == true) {
-            val targetPos = pos.relative(face.oppositeFace)
-            updateBlockState(targetPos, state
-                .with(BlockStateProperties.PAIRED, false))
+            val targetBlock = pos.getRelative(face.oppositeFace)
+            val targetState = targetBlock.novaBlockState ?: return
+            targetState[BlockStateProperties.PAIRED] = false
+            targetBlock.blockData = targetState
         }
     }
     
-    private fun getStateForPlacement(pos: BlockPos, face: BlockFace?) : NovaBlockState {
-        if (face == null) return  Blocks.TATAMI.defaultBlockState
-            .with(BlockStateProperties.PAIRED, false)
-            .with(DefaultBlockStateProperties.FACING, BlockFace.DOWN)
+    private fun freshTatamiState(facing: BlockFace, paired: Boolean) : NovaBlockState {
+        val newState = Blocks.TATAMI.get().createBlockData() as NovaBlockState
+        newState[BlockStateProperties.PAIRED] = paired
+        newState[DefaultBlockStateProperties.FACING_CARTESIAN] = facing
+        return newState
+    }
+    
+    private fun getStateForPlacement(pos: Block, face: BlockFace?) : NovaBlockState {
+        if (face == null) return freshTatamiState(BlockFace.DOWN, false)
         
-        val defaultState = Blocks.TATAMI.defaultBlockState
-            .with(BlockStateProperties.PAIRED, false)
-            .with(DefaultBlockStateProperties.FACING, face)
+        val targetBlock = pos.getRelative(face.oppositeFace)
+        val targetState = targetBlock.novaBlockState
         
-        val targetPos = pos.relative(face.oppositeFace)
-        val targetState = WorldDataManager.getBlockState(targetPos) ?: return defaultState
-        
-        if (targetState.block != Blocks.TATAMI)
-            return defaultState
+        if (targetState == null || targetBlock.blockType != Blocks.TATAMI.get())
+            return freshTatamiState(face, false)
         val targetPaired = targetState[BlockStateProperties.PAIRED]
         
         if (targetPaired != true) {
-            updateBlockState(targetPos, Blocks.TATAMI.defaultBlockState
-                .with(BlockStateProperties.PAIRED, true)
-                .with(DefaultBlockStateProperties.FACING, face.oppositeFace))
-            return Blocks.TATAMI.defaultBlockState
-                .with(BlockStateProperties.PAIRED, true)
-                .with(DefaultBlockStateProperties.FACING, face)
+            targetBlock.blockData = freshTatamiState(face.oppositeFace, true)
+            return freshTatamiState(face, true)
         }
-        return defaultState
+        return freshTatamiState(face, false)
     }
 }

@@ -1,8 +1,4 @@
 package fr.ateastudio.farmersdelight.util
 
-import org.bukkit.block.BlockFace
-import xyz.xenondevs.nova.world.BlockPos
-
-fun BlockPos.relative(face: BlockFace): BlockPos {
-    return this.add(face.modX, face.modY, face.modZ)
-}
+// BlockPos has been replaced by Bukkit's Block throughout the Nova API.
+// Block.getRelative(BlockFace) already provides this functionality natively.

@@ -4,15 +4,18 @@ import fr.ateastudio.farmersdelight.block.behavior.BerryBlock
 import fr.ateastudio.farmersdelight.registry.Items
 import org.bukkit.GameRules
 import org.bukkit.Material
+import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.Levelled
-import xyz.xenondevs.nova.world.BlockPos
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
-import xyz.xenondevs.nova.world.item.NovaItem
+import org.bukkit.inventory.ItemType
+import xyz.xenondevs.nova.registry.RegistryEntry
+import xyz.xenondevs.nova.util.add
+import xyz.xenondevs.nova.util.below
+import xyz.xenondevs.nova.world.block.NovaBlockState
 import kotlin.random.Random
 
 object TomatoCrop : BerryBlock() {
-    override fun resultItem(): NovaItem? {
+    override fun resultItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.TOMATO
         } catch (_ : Exception) {
@@ -20,7 +23,7 @@ object TomatoCrop : BerryBlock() {
         }
     }
     
-    override fun seedItem(): NovaItem? {
+    override fun seedItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.TOMATO_SEEDS
         } catch (_ : Exception) {
@@ -28,7 +31,7 @@ object TomatoCrop : BerryBlock() {
         }
     }
     
-    override fun badResultItem(): NovaItem? {
+    override fun badResultItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.ROTTEN_TOMATO
         } catch (_ : Exception) {
@@ -36,11 +39,11 @@ object TomatoCrop : BerryBlock() {
         }
     }
     
-    override fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
-        return pos.block.type == Material.FARMLAND && hasSufficientLight(pos)
+    override fun mayPlaceOn(pos: Block, state: NovaBlockState): Boolean {
+        return pos.type == Material.FARMLAND && hasSufficientLight(pos)
     }
     
-    override fun handleRandomTick(pos: BlockPos, state: NovaBlockState) {
+    override fun handleRandomTick(pos: Block, state: NovaBlockState) {
         val lightLevel = getRawBrightness(pos)
         if (lightLevel >= 9) {
             val age = getAge(state)
@@ -60,8 +63,8 @@ object TomatoCrop : BerryBlock() {
         }
     }
     
-    private fun getGrowthSpeed(blockPos: BlockPos): Float {
-        val cropBlock= blockPos.block
+    private fun getGrowthSpeed(blockPos: Block): Float {
+        val cropBlock = blockPos
         var growthSpeed = 1.0f
         val belowBlockPos = blockPos.below
         
@@ -69,8 +72,7 @@ object TomatoCrop : BerryBlock() {
         for (xOffset in -1..1) {
             for (zOffset in -1..1) {
                 var individualSpeed = 0.0f
-                val adjacentBlockPos = belowBlockPos.add(xOffset, 0, zOffset)
-                val adjacentBlock = adjacentBlockPos.block
+                val adjacentBlock = belowBlockPos.add(xOffset, 0, zOffset)
                 
                 // Check if block is farmland
                 if (adjacentBlock.type == Material.FARMLAND) {

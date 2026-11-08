@@ -17,7 +17,7 @@ class CuttingBoardRecipe(
     val chanceResults: List<ChanceResult>,
     val soundEvent: String
 ) : NovaRecipe, MultiResultRecipe, SingleInputChoiceRecipe {
-    override val type = RecipeTypes.CUTTING_BOARD
+    override val type get() = RecipeTypes.CUTTING_BOARD.get()
     
     fun getRollableResults(): List<ChanceResult> {
         return this.chanceResults

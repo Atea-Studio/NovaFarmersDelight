@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:bamboo_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:bamboo_slab",
+    "d": "minecraft:bamboo_trapdoor"
+  }
+}

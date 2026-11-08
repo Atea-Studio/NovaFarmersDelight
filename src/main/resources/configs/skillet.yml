@@ -1,0 +1,36 @@
+# Damageable Options (iron material)
+max_durability: 250
+repair_ingredient: "minecraft:iron_ingot"
+
+# Tool Options: no preferred blocks; mining any block with nonzero hardness takes one wear
+default_break_speed: 1.0
+item_damage_on_break_block: 1
+can_break_blocks_in_creative: true
+
+# Weapon Options: iron damage bonus 2 + 5 => +7 over the player's base 1; speed 4 - 3.1; knockback +1
+attack_damage: 8.0
+attack_speed: 0.9
+knockback_bonus: 1.0
+can_sweep_attack: false
+item_damage_on_attack_entity: 1
+
+# Enchantable Options (iron enchantability; Sweeping Edge excluded)
+enchantment_value: 14
+primary_enchantments:
+  - minecraft:sharpness
+  - minecraft:smite
+  - minecraft:bane_of_arthropods
+  - minecraft:knockback
+  - minecraft:fire_aspect
+  - minecraft:looting
+  - minecraft:unbreaking
+supported_enchantments:
+  - minecraft:sharpness
+  - minecraft:smite
+  - minecraft:bane_of_arthropods
+  - minecraft:knockback
+  - minecraft:fire_aspect
+  - minecraft:looting
+  - minecraft:unbreaking
+  - minecraft:mending
+  - minecraft:vanishing_curse

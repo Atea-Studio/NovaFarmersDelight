@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:skillet",
+  "amount": 1,
+  "shape": [
+    " ii",
+    " ii",
+    "b  "
+  ],
+  "ingredients": {
+    "i": "minecraft:iron_ingot",
+    "b": "minecraft:brick"
+  }
+}

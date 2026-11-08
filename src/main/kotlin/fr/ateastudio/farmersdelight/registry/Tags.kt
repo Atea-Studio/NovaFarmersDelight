@@ -14,4 +14,8 @@ object Tags {
         Material.MAGMA_BLOCK,
         Material.LAVA_CAULDRON,
     )
+    // create:chute is an optional (required=false) member and is not available here.
+    val HEAT_CONDUCTOR = listOf(
+        Material.HOPPER,
+    )
 }

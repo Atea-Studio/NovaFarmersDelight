@@ -10,11 +10,11 @@ import xyz.xenondevs.invui.item.Item
 import xyz.xenondevs.invui.item.ItemWrapper
 import xyz.xenondevs.nova.ui.menu.explorer.recipes.createRecipeChoiceItem
 import xyz.xenondevs.nova.ui.menu.explorer.recipes.group.RecipeGroup
-import xyz.xenondevs.nova.util.item.toItemStack
+import xyz.xenondevs.nova.world.item.guiItemProvider
 
 object CuttingBoardRecipeGroup : RecipeGroup<CuttingBoardRecipe>() {
     override val priority = 4
-    override val icon = Items.CUTTING_BOARD.clientsideProvider
+    override val icon = Items.CUTTING_BOARD.guiItemProvider
     override val texture = GuiTextures.CUTTING_BOARD_RECIPE
     
     override fun createGui(recipe: CuttingBoardRecipe): Gui {
@@ -24,7 +24,7 @@ object CuttingBoardRecipeGroup : RecipeGroup<CuttingBoardRecipe>() {
             return if (resultStacks.size > index) {
                 resultStacks[index]
             } else {
-                Material.AIR.toItemStack()
+                ItemStack(Material.AIR)
             }
         }
         

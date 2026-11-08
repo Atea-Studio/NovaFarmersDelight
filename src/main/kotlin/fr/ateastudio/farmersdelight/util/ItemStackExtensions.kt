@@ -1,24 +1,20 @@
 package fr.ateastudio.farmersdelight.util
 
+import fr.ateastudio.farmersdelight.registry.ToolCategories
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
-import org.bukkit.craftbukkit.inventory.CraftItemStack
 import org.bukkit.entity.Item
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
-import xyz.xenondevs.nova.util.item.novaItem
-import xyz.xenondevs.nova.world.item.NovaItem
 import xyz.xenondevs.nova.world.item.behavior.Consumable
-import xyz.xenondevs.nova.world.item.tool.ToolCategory
+import xyz.xenondevs.nova.world.item.getBehaviorOrNull
+import xyz.xenondevs.nova.world.item.isNova
+import xyz.xenondevs.nova.world.item.itemType
+import xyz.xenondevs.nova.world.item.itemTypeEntry
 
-fun ItemStack.hasCategoryId(categoryId: String): Boolean {
-    return ToolCategory.ofItem(this).any { it.id.value() == categoryId }
-}
-
-fun ItemStack.isKnife(): Boolean {
-    return ToolCategory.ofItem(this).any { it.id.value() == "knives" || it.id.value() == "knife" }
-}
+/** A knife is any member of the common `c:tools/knife` tag ([ToolCategories.KNIVES]); no id/name guessing. */
+fun ItemStack.isKnife(): Boolean = itemTypeEntry in ToolCategories.KNIVES
 
 fun ItemStack.spawnItemEntity(world: World, x: Double, y: Double, z: Double, motionX: Double, motionY: Double, motionZ: Double) {
     val location = Location(world, x, y, z)
@@ -31,14 +27,14 @@ fun ItemStack.spawnItemEntity(location: Location, motionX: Double, motionY: Doub
 }
 
 fun ItemStack.getItemId(): String {
-    if (this.novaItem is NovaItem) {
-        return this.novaItem!!.id.toString()
+    if (this.itemType.isNova) {
+        return this.itemTypeEntry.key.toString()
     }
     return this.type.key.toString()
 }
 
 fun ItemStack.getCraftingRemainingItem(): ItemStack {
-    if (this.novaItem == null) {
+    if (!this.itemType.isNova) {
         return when (this.type) {
             Material.MUSHROOM_STEW,
             Material.RABBIT_STEW,
@@ -62,8 +58,7 @@ fun ItemStack.getCraftingRemainingItem(): ItemStack {
         }
     }
     else {
-        val novaItem = this.novaItem!!
-        val consumable = novaItem.getBehaviorOrNull<Consumable>()
+        val consumable = this.itemType.getBehaviorOrNull<Consumable>()
         if (consumable != null) {
             return consumable.remains ?: ItemStack.empty()
         }
@@ -78,6 +73,3 @@ fun ItemStack.hasCraftingRemainingItem(): Boolean {
 fun ItemStack.isTag(tag: List<Material>): Boolean {
         return tag.contains(this.type)
 }
-
-fun ItemStack?.unwrap(): net.minecraft.world.item.ItemStack =
-    this?.let(CraftItemStack::unwrap) ?: net.minecraft.world.item.ItemStack.EMPTY

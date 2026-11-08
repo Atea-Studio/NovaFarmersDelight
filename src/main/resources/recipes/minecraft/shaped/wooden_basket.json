@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:wooden_basket",
+  "amount": 1,
+  "shape": [
+    "s s",
+    "c c",
+    "scs"
+  ],
+  "ingredients": {
+    "s": "minecraft:stick",
+    "c": "farmersdelight:canvas"
+  }
+}

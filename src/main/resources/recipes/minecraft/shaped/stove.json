@@ -1,0 +1,15 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:stove",
+  "amount": 1,
+  "shape": [
+    "iii",
+    "b b",
+    "bcb"
+  ],
+  "ingredients": {
+    "i": "minecraft:iron_ingot",
+    "b": "minecraft:bricks",
+    "c": "minecraft:campfire"
+  }
+}

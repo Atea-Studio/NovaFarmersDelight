@@ -5,12 +5,18 @@ import fr.ateastudio.farmersdelight.NovaFarmersDelight.registerItem
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation
 import io.papermc.paper.registry.keys.SoundEventKeys
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage
 import xyz.xenondevs.nova.world.item.behavior.Consumable
 import xyz.xenondevs.nova.world.item.behavior.Damageable
 import xyz.xenondevs.nova.world.item.behavior.Enchantable
 import xyz.xenondevs.nova.world.item.behavior.Tool
+import xyz.xenondevs.nova.world.item.behavior.Weapon
+import fr.ateastudio.farmersdelight.item.ExtinguishOnConsume
+import fr.ateastudio.farmersdelight.item.HandheldSkillet
+import fr.ateastudio.farmersdelight.item.MelonJuiceHealing
 
 @Suppress("unused", "UnstableApiUsage")
 @Init(stage = InitStage.PRE_PACK)
@@ -20,6 +26,44 @@ object Items {
         maxStackSize(1)
     }
     val CUTTING_BOARD = registerItem(Blocks.CUTTING_BOARD)
+    // Standalone item (not block-linked) so a non-sneaking click on a block reaches handheld cooking;
+    // HandheldSkillet performs the sneak-only placement itself.
+    val SKILLET = item("skillet") {
+        name(Component.translatable("block.farmersdelight.skillet"))
+        lore(
+            Component.translatable("tooltip.farmersdelight.placeable_sneaking")
+                .color(NamedTextColor.DARK_GRAY)
+                .decorate(TextDecoration.ITALIC)
+        )
+        behaviors(Tool(toolRules = emptyList()), Damageable(), Enchantable(), Weapon(), HandheldSkillet)
+        maxStackSize(1)
+        modelDefinition {
+            model = buildModel {
+                getModel("item/skillet")
+            }
+        }
+    }
+    val STOVE = registerItem(Blocks.STOVE)
+    
+    val OAK_CABINET = registerItem(Blocks.OAK_CABINET)
+    val SPRUCE_CABINET = registerItem(Blocks.SPRUCE_CABINET)
+    val BIRCH_CABINET = registerItem(Blocks.BIRCH_CABINET)
+    val JUNGLE_CABINET = registerItem(Blocks.JUNGLE_CABINET)
+    val ACACIA_CABINET = registerItem(Blocks.ACACIA_CABINET)
+    val DARK_OAK_CABINET = registerItem(Blocks.DARK_OAK_CABINET)
+    val MANGROVE_CABINET = registerItem(Blocks.MANGROVE_CABINET)
+    val CHERRY_CABINET = registerItem(Blocks.CHERRY_CABINET)
+    val BAMBOO_CABINET = registerItem(Blocks.BAMBOO_CABINET)
+    val CRIMSON_CABINET = registerItem(Blocks.CRIMSON_CABINET)
+    val WARPED_CABINET = registerItem(Blocks.WARPED_CABINET)
+    
+    // Item model is the upright basket, as in the original (the block's default state faces north).
+    val WOODEN_BASKET = item(Blocks.WOODEN_BASKET) {
+        modelDefinition { model = buildModel { getModel("block/wooden_basket") } }
+    }
+    val BAMBOO_BASKET = item(Blocks.BAMBOO_BASKET) {
+        modelDefinition { model = buildModel { getModel("block/bamboo_basket") } }
+    }
     
     val CARROT_CRATE = registerItem(Blocks.CARROT_CRATE)
     val POTATO_CRATE = registerItem(Blocks.POTATO_CRATE)
@@ -52,23 +96,23 @@ object Items {
     val MUDDY_FARMLAND = registerItem(Blocks.MUDDY_FARMLAND)
     
     val FLINT_KNIFE = item("flint_knife") {
-        behaviors(Tool(), Damageable(), Enchantable())
+        behaviors(Tool(), Weapon(), Damageable(), Enchantable())
         maxStackSize(1)
     }
     val IRON_KNIFE = item("iron_knife") {
-        behaviors(Tool(), Damageable(), Enchantable())
+        behaviors(Tool(), Weapon(), Damageable(), Enchantable())
         maxStackSize(1)
     }
     val DIAMOND_KNIFE = item("diamond_knife") {
-        behaviors(Tool(), Damageable(), Enchantable())
+        behaviors(Tool(), Weapon(), Damageable(), Enchantable())
         maxStackSize(1)
     }
     val NETHERITE_KNIFE = item("netherite_knife") {
-        behaviors(Tool(), Damageable(), Enchantable())
+        behaviors(Tool(), Weapon(), Damageable(), Enchantable())
         maxStackSize(1)
     }
     val GOLDEN_KNIFE = item("golden_knife") {
-        behaviors(Tool(), Damageable(), Enchantable())
+        behaviors(Tool(), Weapon(), Damageable(), Enchantable())
         maxStackSize(1)
     }
     
@@ -187,7 +231,7 @@ object Items {
         maxStackSize(16)
     }
     val MELON_JUICE = item("melon_juice") {
-        behaviors(Consumable())
+        behaviors(Consumable(), MelonJuiceHealing)
         maxStackSize(16)
     }
     val TOMATO_SAUCE = item("tomato_sauce") {
@@ -294,7 +338,7 @@ object Items {
         behaviors(Consumable())
     }
     val MELON_POPSICLE = item("melon_popsicle") {
-        behaviors(Consumable())
+        behaviors(Consumable(), ExtinguishOnConsume)
     }
     val GLOW_BERRY_CUSTARD = item("glow_berry_custard") {
         behaviors(Consumable())

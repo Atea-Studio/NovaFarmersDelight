@@ -45,7 +45,8 @@ object CookingPotRecipeDeserializer : RecipeDeserializer<CookingPotRecipe> {
         val result = ItemUtils.getItemStack(json.getStringOrNull("result")!!)
         result.amount = json.getIntOrNull("amount") ?: 1
         
+        val container = json.getStringOrNull("container")?.let(ItemUtils::getItemStack)
         
-        return CookingPotRecipe(RecipeDeserializer.getRecipeKey(file), inputChoice, result, time, experience)
+        return CookingPotRecipe(RecipeDeserializer.getRecipeKey(file), inputChoice, result, time, experience, container)
     }
 }

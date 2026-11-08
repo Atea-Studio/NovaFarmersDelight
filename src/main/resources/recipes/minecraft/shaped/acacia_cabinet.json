@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:acacia_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:acacia_slab",
+    "d": "minecraft:acacia_trapdoor"
+  }
+}
