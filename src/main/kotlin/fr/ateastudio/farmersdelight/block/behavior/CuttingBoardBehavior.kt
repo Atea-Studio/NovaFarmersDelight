@@ -14,13 +14,13 @@ import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 /** The board needs rigid or upper-face-center support below; losing it removes the board. */
 object CuttingBoardBehavior : BlockBehavior {
 
-    override suspend fun canPlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean =
-        hasSupport(pos)
+    override suspend fun canPlace(block: Block, data: NovaBlockState, ctx: Context<BlockPlace>): Boolean =
+        hasSupport(block)
 
-    override fun handleNeighborChanged(pos: Block, state: NovaBlockState) {
-        if (hasSupport(pos)) return
+    override fun handleNeighborChanged(block: Block, state: NovaBlockState) {
+        if (hasSupport(block)) return
         val context = Context.intention(BlockBreak)
-            .param(BlockBreak.BLOCK, pos)
+            .param(BlockBreak.BLOCK, block)
             .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
             .build()
         BlockUtils.breakBlockNaturally(context)

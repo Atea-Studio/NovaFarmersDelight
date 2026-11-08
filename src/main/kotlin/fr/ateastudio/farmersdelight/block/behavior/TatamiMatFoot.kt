@@ -12,9 +12,9 @@ import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
 
 object TatamiMatFoot : BlockBehavior {
     
-    override fun handleBreak(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>) {
+    override fun handleBreak(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>) {
         val face = state[DefaultBlockStateProperties.FACING_HORIZONTAL]!!
-        val footPos = pos.getRelative(face.oppositeFace)
+        val footPos = block.getRelative(face.oppositeFace)
         if (footPos.blockType == Blocks.FULL_TATAMI_MAT_HEAD.get()) {
             val contextFoot = Context.intention(BlockBreak)
                 .param(BlockBreak.BLOCK, footPos)

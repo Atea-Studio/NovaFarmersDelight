@@ -15,9 +15,9 @@ import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
  */
 object CookingPotBehavior : BlockBehavior {
 
-    override fun getDrops(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+    override fun getDrops(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         if (!ctx[BlockBreak.BLOCK_DROPS] || ctx[BlockBreak.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE)
             return emptyList()
-        return super.getDrops(pos, state, ctx)
+        return super.getDrops(block, state, ctx)
     }
 }

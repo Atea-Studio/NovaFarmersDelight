@@ -3,17 +3,17 @@ package fr.ateastudio.farmersdelight.util
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Tags
-import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.BlockType
 import org.bukkit.block.data.Lightable
 import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.world.block.blockType
 import xyz.xenondevs.nova.world.block.novaBlockState
 
 
-fun Block.isTag(tag: List<Material>): Boolean {
-    return tag.contains(this.type)
+fun Block.isTag(tag: List<BlockType>): Boolean {
+    return tag.contains(this.blockType)
 }
 
 /** Membership of `farmersdelight:tray_heat_sources`, irrespective of any lit state. */

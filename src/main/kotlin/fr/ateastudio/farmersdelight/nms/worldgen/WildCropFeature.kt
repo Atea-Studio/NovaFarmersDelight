@@ -28,7 +28,7 @@ class WildCropFeature(
     val floorFeature: Optional<Holder<PlacedFeature>>
 ) : FeatureType(CODEC) {
     
-    override fun place(level: WorldGenLevel, chunkGenerator: ChunkGenerator, random: RandomSource, origin: BlockPos): Boolean {
+    override fun place(level: WorldGenLevel, generator: ChunkGenerator, random: RandomSource, pos: BlockPos): Boolean {
         var i = 0
         val xzSpreadRange = xzSpread + 1
         val ySpreadRange = ySpread + 1
@@ -37,25 +37,25 @@ class WildCropFeature(
         
         val floor = floorFeature.getOrNull()
         if (floor != null) {
-            for (j in 0 until tries) {
-                mutablePos.setWithOffset(origin, random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange))
-                if (floor.value().place(level, chunkGenerator, random, mutablePos)) {
+            (0 until tries).forEach { _ ->
+                mutablePos.setWithOffset(pos, random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange))
+                if (floor.value().place(level, generator, random, mutablePos)) {
                     ++i
                 }
             }
         }
         
-        for (k in 0 until tries) {
+        (0 until tries).forEach { _ ->
             val shorterXZ = xzSpreadRange - 2
-            mutablePos.setWithOffset(origin, random.nextInt(shorterXZ) - random.nextInt(shorterXZ), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(shorterXZ) - random.nextInt(shorterXZ))
-            if (primaryFeature.value().place(level, chunkGenerator, random, mutablePos)) {
+            mutablePos.setWithOffset(pos, random.nextInt(shorterXZ) - random.nextInt(shorterXZ), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(shorterXZ) - random.nextInt(shorterXZ))
+            if (primaryFeature.value().place(level, generator, random, mutablePos)) {
                 ++i
             }
         }
         
-        for (l in 0 until tries) {
-            mutablePos.setWithOffset(origin, random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange))
-            if (secondaryFeature.value().place(level, chunkGenerator, random, mutablePos)) {
+        (0 until tries).forEach { _ ->
+            mutablePos.setWithOffset(pos, random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange), random.nextInt(ySpreadRange) - random.nextInt(ySpreadRange), random.nextInt(xzSpreadRange) - random.nextInt(xzSpreadRange))
+            if (secondaryFeature.value().place(level, generator, random, mutablePos)) {
                 ++i
             }
         }

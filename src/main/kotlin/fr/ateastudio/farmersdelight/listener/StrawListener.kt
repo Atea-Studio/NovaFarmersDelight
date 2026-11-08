@@ -6,15 +6,14 @@ import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Items
 import fr.ateastudio.farmersdelight.util.isKnife
-import org.bukkit.Material
 import org.bukkit.block.data.Ageable
+import org.bukkit.block.BlockType
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage
 import fr.ateastudio.farmersdelight.NovaFarmersDelight
-import xyz.xenondevs.nova.util.dropItem
 import xyz.xenondevs.nova.world.block.blockType
 import xyz.xenondevs.nova.world.block.novaBlockState
 import kotlin.random.Random
@@ -33,11 +32,11 @@ object StrawListener : Listener {
         if (event.isCancelled || !player.inventory.itemInMainHand.isKnife()) return
         
         var chance = 0.0
-        when (block.type) {
-            Material.SHORT_GRASS,Material.SHORT_DRY_GRASS, Material.TALL_GRASS, Material.TALL_DRY_GRASS -> {
+        when (block.blockType) {
+            BlockType.SHORT_GRASS, BlockType.SHORT_DRY_GRASS, BlockType.TALL_GRASS, BlockType.TALL_DRY_GRASS -> {
                 chance = 0.2
             }
-            Material.WHEAT -> {
+            BlockType.WHEAT -> {
                 val data = block.blockData
                 if (data is Ageable) {
                     if (data.age != data.maximumAge) {
@@ -63,7 +62,7 @@ object StrawListener : Listener {
         
         if (Random.nextDouble() <= chance) {
             val straw = Items.STRAW.createItemStack()
-            block.location.dropItem(straw)
+            block.world.dropItemNaturally(block.location, straw)
         }
         
     }

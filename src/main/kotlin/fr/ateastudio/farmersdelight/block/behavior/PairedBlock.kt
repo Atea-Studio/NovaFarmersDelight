@@ -15,17 +15,17 @@ import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
 
 object PairedBlock : BlockBehavior {
     
-    override fun handlePlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
+    override fun handlePlace(block: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
         val face = ctx[BlockPlace.CLICKED_BLOCK_FACE]
-        pos.blockData = getStateForPlacement(pos, face)
+        block.blockData = getStateForPlacement(block, face)
     }
     
-    override fun handleBreak(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>) {
+    override fun handleBreak(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>) {
         val face = state[DefaultBlockStateProperties.FACING_CARTESIAN]
         val paired = state[BlockStateProperties.PAIRED]
         
         if (face != null && paired == true) {
-            val targetBlock = pos.getRelative(face.oppositeFace)
+            val targetBlock = block.getRelative(face.oppositeFace)
             val targetState = targetBlock.novaBlockState ?: return
             targetState[BlockStateProperties.PAIRED] = false
             targetBlock.blockData = targetState

@@ -33,6 +33,7 @@ import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockType
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
 import xyz.xenondevs.nova.world.item.ItemAction
 import xyz.xenondevs.nova.world.item.behavior.ItemBehavior
@@ -95,7 +96,6 @@ internal fun isStrongSkilletAttack(attackStrength: Float): Boolean = attackStren
  * Handheld skillet: sneak-use on a block places it; otherwise, near heat, it takes one open-fire-cookable
  * ingredient from the other hand and cooks it while the use button is held.
  */
-@Suppress("UnstableApiUsage")
 object HandheldSkillet : ItemBehavior {
 
     override fun useOnBlock(itemStack: ItemStack, block: Block, ctx: Context<BlockInteract>): InteractionResult {
@@ -116,7 +116,7 @@ object HandheldSkillet : ItemBehavior {
             target.x + 15 / 16.0, target.y + 4 / 16.0, target.z + 15 / 16.0
         )
         val refusal = when {
-            !target.isReplaceable -> "target ${target.type} at ${target.location.toVector()} is not replaceable"
+            !target.isReplaceable -> "target ${target.blockType} at ${target.location.toVector()} is not replaceable"
             !ProtectionManager.canPlace(player, handItem, target) -> "a protection plugin denied placement at ${target.location.toVector()}"
             target.world.getNearbyEntities(skilletShape).any { it is LivingEntity } -> "an entity occupies ${target.location.toVector()}"
             else -> null

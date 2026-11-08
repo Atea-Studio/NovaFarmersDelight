@@ -35,7 +35,6 @@ import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.util.below
-import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.util.playSound
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.NovaBlockState
@@ -275,7 +274,7 @@ class Skillet(
     }
 
     private fun getDisplayLocation(): Location =
-        block.location.center().add(0.0, 0.1, 0.0)
+        block.location.toCenterLocation().add(0.0, 0.1, 0.0)
 
     companion object {
         // Half a block plus the item entity's half-width (0.125), so it doesn't overlap the backing block.

@@ -5,25 +5,26 @@ import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
-import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.context.intention.BlockPlace
-import org.bukkit.block.Block
 import xyz.xenondevs.nova.integration.customitems.CustomItemServiceManager.removeBlock
 import xyz.xenondevs.nova.util.BlockUtils.breakBlockNaturally
 import xyz.xenondevs.nova.util.addToInventoryOrDrop
 import xyz.xenondevs.nova.world.InteractionResult
-import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.NovaBlockState
+import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
 import xyz.xenondevs.nova.world.block.novaBlockState
 
+@Suppress("UnstableApiUsage")
 abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
     protected open val maxServings : Int
         get() = 4
@@ -38,24 +39,24 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
      */
     abstract fun getFullBlockItem(): ItemStack
     
-    override fun handlePlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
+    override fun handlePlace(block: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
         state[BlockStateProperties.SERVINGS] = maxServings
-        pos.blockData = state
+        block.blockData = state
     }
     
-    override fun use(pos: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun use(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Fail
         val hand = ctx[BlockInteract.HELD_HAND] ?: return InteractionResult.Fail
-        return takeServing(pos, state, player, hand)
+        return takeServing(block, state, player, hand)
     }
     
-    override fun useItemOn(pos: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Fail
         val hand = ctx[BlockInteract.HELD_HAND] ?: return InteractionResult.Fail
-        return takeServing(pos, state, player, hand)
+        return takeServing(block, state, player, hand)
     }
     
-    override fun getDrops(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+    override fun getDrops(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         if (!ctx[BlockBreak.BLOCK_DROPS] || ctx[BlockBreak.SOURCE_PLAYER]?.gameMode == GameMode.CREATIVE) {
             return emptyList()
         }
@@ -63,7 +64,7 @@ abstract class FeastBlock(private val hasLeftovers: Boolean) : BlockBehavior {
         val servings = state[BlockStateProperties.SERVINGS] ?: 0
         if (servings != maxServings) {
             if (hasLeftovers) {
-                return listOf(ItemStack(Material.BOWL))
+                return listOf(ItemType.BOWL.createItemStack())
             }
             return emptyList()
         } else {

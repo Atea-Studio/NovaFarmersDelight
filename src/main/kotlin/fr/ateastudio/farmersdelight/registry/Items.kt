@@ -18,7 +18,7 @@ import fr.ateastudio.farmersdelight.item.ExtinguishOnConsume
 import fr.ateastudio.farmersdelight.item.HandheldSkillet
 import fr.ateastudio.farmersdelight.item.MelonJuiceHealing
 
-@Suppress("unused", "UnstableApiUsage")
+@Suppress("unused")
 @Init(stage = InitStage.PRE_PACK)
 object Items {
     
@@ -227,7 +227,7 @@ object Items {
         maxStackSize(16)
     }
     val APPLE_CIDER = item("apple_cider") {
-        behaviors(Consumable(animation = ItemUseAnimation.DRINK, sound = SoundEventKeys.ENTITY_GENERIC_DRINK))
+        behaviors(Consumable(animation = ItemUseAnimation.DRINK, sound = SoundEventKeys.ENTITY_GENERIC_DRINK.key()))
         maxStackSize(16)
     }
     val MELON_JUICE = item("melon_juice") {

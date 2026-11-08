@@ -7,7 +7,6 @@ import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.Items
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import net.kyori.adventure.text.Component
-import org.bukkit.Material
 import org.bukkit.inventory.RecipeChoice
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.invui.gui.Gui
@@ -16,7 +15,6 @@ import xyz.xenondevs.invui.item.ItemBuilder
 import xyz.xenondevs.nova.ui.menu.explorer.recipes.createRecipeChoiceItem
 import xyz.xenondevs.nova.ui.menu.explorer.recipes.group.RecipeGroup
 import xyz.xenondevs.nova.world.item.DefaultGuiItems
-import xyz.xenondevs.nova.world.item.createItemStack
 import xyz.xenondevs.nova.world.item.guiItemProvider
 
 object CookingPotRecipeGroup : RecipeGroup<CookingPotRecipe>() {
@@ -28,7 +26,7 @@ object CookingPotRecipeGroup : RecipeGroup<CookingPotRecipe>() {
         return if (inputs.size > index) {
             createRecipeChoiceItem(inputs[index])
         } else {
-            Item.simple(ItemStack(Material.AIR))
+            Item.simple(ItemStack.empty())
         }
     }
     

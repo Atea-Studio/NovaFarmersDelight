@@ -1,21 +1,21 @@
 package fr.ateastudio.farmersdelight.registry
 
-import org.bukkit.Material
+import org.bukkit.block.BlockType
 
 object Tags {
     val TRAY_HEAT_SOURCE = listOf(
-        Material.LAVA,
-        Material.CAMPFIRE,
-        Material.SOUL_CAMPFIRE,
-        Material.FIRE,
-        Material.SOUL_FIRE,
+        BlockType.LAVA,
+        BlockType.CAMPFIRE,
+        BlockType.SOUL_CAMPFIRE,
+        BlockType.FIRE,
+        BlockType.SOUL_FIRE,
     )
     val HEAT_SOURCE = listOf(
-        Material.MAGMA_BLOCK,
-        Material.LAVA_CAULDRON,
+        BlockType.MAGMA_BLOCK,
+        BlockType.LAVA_CAULDRON,
     )
     // create:chute is an optional (required=false) member and is not available here.
     val HEAT_CONDUCTOR = listOf(
-        Material.HOPPER,
+        BlockType.HOPPER,
     )
 }

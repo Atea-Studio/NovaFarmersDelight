@@ -1,8 +1,8 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
 import org.bukkit.GameMode
-import org.bukkit.Material
 import org.bukkit.block.Block
+import org.bukkit.block.BlockType
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
@@ -12,6 +12,7 @@ import xyz.xenondevs.nova.util.BlockUtils
 import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
+import xyz.xenondevs.nova.world.block.blockType
 import kotlin.random.Random
 
 
@@ -20,7 +21,7 @@ abstract class WildcropBlock : BlockBehavior {
     open val dropProbability = 0.57
     abstract fun seedItem() : ItemStack?
     
-    override fun getDrops(pos: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+    override fun getDrops(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         val player = ctx[BlockBreak.SOURCE_PLAYER]
         val tool = ctx[BlockBreak.TOOL_ITEM_STACK]
         val seedItem = seedItem()
@@ -39,14 +40,14 @@ abstract class WildcropBlock : BlockBehavior {
         return result
     }
     
-    override fun handleNeighborChanged(pos: Block, state: NovaBlockState) {
-        if (!canSurvive(state, pos)) {
-            breakBlock(pos)
+    override fun handleNeighborChanged(block: Block, state: NovaBlockState) {
+        if (!canSurvive(state, block)) {
+            breakBlock(block)
         }
     }
     
-    override suspend fun canPlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
-        return mayPlaceOn(pos.below, state) && pos.isEmpty
+    override suspend fun canPlace(block: Block, data: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
+        return mayPlaceOn(block.below, data) && block.isEmpty
     }
     
     protected open fun canSurvive(state: NovaBlockState, pos: Block): Boolean {
@@ -55,10 +56,10 @@ abstract class WildcropBlock : BlockBehavior {
     }
     
     protected open fun mayPlaceOn(pos: Block, state: NovaBlockState): Boolean {
-        return  pos.type == Material.ROOTED_DIRT ||
-                pos.type == Material.COARSE_DIRT ||
-                pos.type == Material.GRASS_BLOCK ||
-                pos.type == Material.DIRT
+        return  pos.blockType == BlockType.ROOTED_DIRT ||
+                pos.blockType == BlockType.COARSE_DIRT ||
+                pos.blockType == BlockType.GRASS_BLOCK ||
+                pos.blockType == BlockType.DIRT
     }
     
     protected fun simulateBinomialDrops(fortuneLevel: Int): Int {

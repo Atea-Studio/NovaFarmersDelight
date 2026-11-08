@@ -4,26 +4,31 @@ import xyz.xenondevs.nova.world.item.createItemStack
 
 import fr.ateastudio.farmersdelight.registry.Items
 import fr.ateastudio.farmersdelight.util.isKnife
+import io.papermc.paper.registry.RegistryAccess
+import io.papermc.paper.registry.RegistryKey
+import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys
 import net.kyori.adventure.key.Key
-import org.bukkit.Material
-import org.bukkit.Tag as BukkitTag
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
 import org.bukkit.inventory.RecipeChoice
+import xyz.xenondevs.nova.world.item.itemType
 import xyz.xenondevs.nova.world.item.tool.VanillaToolCategories
 
+@Suppress("UnstableApiUsage")
 private fun ItemStack.hasToolCategory(category: Key): Boolean {
-    val type = this.type
-    return when (category) {
-        VanillaToolCategories.AXE -> BukkitTag.ITEMS_AXES.isTagged(type)
-        VanillaToolCategories.PICKAXE -> BukkitTag.ITEMS_PICKAXES.isTagged(type)
-        VanillaToolCategories.SHOVEL -> BukkitTag.ITEMS_SHOVELS.isTagged(type)
-        VanillaToolCategories.HOE -> BukkitTag.ITEMS_HOES.isTagged(type)
-        VanillaToolCategories.SWORD -> BukkitTag.ITEMS_SWORDS.isTagged(type)
-        VanillaToolCategories.SHEARS -> type == Material.SHEARS
-        else -> false
+    val tag = when (category) {
+        VanillaToolCategories.AXE -> ItemTypeTagKeys.AXES
+        VanillaToolCategories.PICKAXE -> ItemTypeTagKeys.PICKAXES
+        VanillaToolCategories.SHOVEL -> ItemTypeTagKeys.SHOVELS
+        VanillaToolCategories.HOE -> ItemTypeTagKeys.HOES
+        VanillaToolCategories.SWORD -> ItemTypeTagKeys.SWORDS
+        VanillaToolCategories.SHEARS -> return itemType == ItemType.SHEARS
+        else -> return false
     }
+    return itemType in RegistryAccess.registryAccess().getRegistry(RegistryKey.ITEM).getTagValues(tag)
 }
 
+@Suppress("UnstableApiUsage", "NonExtendableApiUsage")
 sealed class ToolActionIngredient : RecipeChoice {
     abstract fun getChoices() : List<ItemStack>
     
@@ -46,14 +51,14 @@ sealed class ToolActionIngredient : RecipeChoice {
         @Deprecated("")
         override fun getItemStack(): ItemStack {
             return when(tag) {
-                ToolTag.SHEARS -> ItemStack(Material.SHEARS)
-                ToolTag.KNIVES -> ItemStack(Material.WOODEN_SWORD)
+                ToolTag.SHEARS -> ItemType.SHEARS.createItemStack()
+                ToolTag.KNIVES -> ItemType.WOODEN_SWORD.createItemStack()
                 else -> ItemStack.empty()
             }
         }
         override fun getChoices(): List<ItemStack> {
             return when(tag) {
-                ToolTag.SHEARS -> listOf(ItemStack(Material.SHEARS))
+                ToolTag.SHEARS -> listOf(ItemType.SHEARS.createItemStack())
                 ToolTag.KNIVES -> listOf(
                     Items.FLINT_KNIFE.createItemStack(),
                     Items.IRON_KNIFE.createItemStack(),
@@ -76,8 +81,8 @@ sealed class ToolActionIngredient : RecipeChoice {
                 true
             } else {
                 when (action.actionName.split("_").getOrNull(0)) {
-                    "shield" -> itemStack.type == Material.SHIELD
-                    "fishing" -> itemStack.type == Material.FISHING_ROD
+                    "shield" -> itemStack.itemType == ItemType.SHIELD
+                    "fishing" -> itemStack.itemType == ItemType.FISHING_ROD
                     else -> false
                 }
             }
@@ -90,48 +95,48 @@ sealed class ToolActionIngredient : RecipeChoice {
         override fun getChoices(): List<ItemStack> {
             return when (action.actionName.split("_").getOrNull(0)) {
                 "axe" -> listOf(
-                    ItemStack(Material.WOODEN_AXE),
-                    ItemStack(Material.STONE_AXE),
-                    ItemStack(Material.IRON_AXE),
-                    ItemStack(Material.GOLDEN_AXE),
-                    ItemStack(Material.DIAMOND_AXE),
-                    ItemStack(Material.NETHERITE_AXE),
+                    ItemType.WOODEN_AXE.createItemStack(),
+                    ItemType.STONE_AXE.createItemStack(),
+                    ItemType.IRON_AXE.createItemStack(),
+                    ItemType.GOLDEN_AXE.createItemStack(),
+                    ItemType.DIAMOND_AXE.createItemStack(),
+                    ItemType.NETHERITE_AXE.createItemStack(),
                 )
                 "pickaxe" -> listOf(
-                    ItemStack(Material.WOODEN_PICKAXE),
-                    ItemStack(Material.STONE_PICKAXE),
-                    ItemStack(Material.IRON_PICKAXE),
-                    ItemStack(Material.GOLDEN_PICKAXE),
-                    ItemStack(Material.DIAMOND_PICKAXE),
-                    ItemStack(Material.NETHERITE_PICKAXE),
+                    ItemType.WOODEN_PICKAXE.createItemStack(),
+                    ItemType.STONE_PICKAXE.createItemStack(),
+                    ItemType.IRON_PICKAXE.createItemStack(),
+                    ItemType.GOLDEN_PICKAXE.createItemStack(),
+                    ItemType.DIAMOND_PICKAXE.createItemStack(),
+                    ItemType.NETHERITE_PICKAXE.createItemStack(),
                 )
                 "shovel" -> listOf(
-                    ItemStack(Material.WOODEN_SHOVEL),
-                    ItemStack(Material.STONE_SHOVEL),
-                    ItemStack(Material.IRON_SHOVEL),
-                    ItemStack(Material.GOLDEN_SHOVEL),
-                    ItemStack(Material.DIAMOND_SHOVEL),
-                    ItemStack(Material.NETHERITE_SHOVEL),
+                    ItemType.WOODEN_SHOVEL.createItemStack(),
+                    ItemType.STONE_SHOVEL.createItemStack(),
+                    ItemType.IRON_SHOVEL.createItemStack(),
+                    ItemType.GOLDEN_SHOVEL.createItemStack(),
+                    ItemType.DIAMOND_SHOVEL.createItemStack(),
+                    ItemType.NETHERITE_SHOVEL.createItemStack(),
                 )
                 "hoe", "till" -> listOf(
-                    ItemStack(Material.WOODEN_HOE),
-                    ItemStack(Material.STONE_HOE),
-                    ItemStack(Material.IRON_HOE),
-                    ItemStack(Material.GOLDEN_HOE),
-                    ItemStack(Material.DIAMOND_HOE),
-                    ItemStack(Material.NETHERITE_HOE),
+                    ItemType.WOODEN_HOE.createItemStack(),
+                    ItemType.STONE_HOE.createItemStack(),
+                    ItemType.IRON_HOE.createItemStack(),
+                    ItemType.GOLDEN_HOE.createItemStack(),
+                    ItemType.DIAMOND_HOE.createItemStack(),
+                    ItemType.NETHERITE_HOE.createItemStack(),
                 )
                 "sword" -> listOf(
-                    ItemStack(Material.WOODEN_SWORD),
-                    ItemStack(Material.STONE_SWORD),
-                    ItemStack(Material.IRON_SWORD),
-                    ItemStack(Material.GOLDEN_SWORD),
-                    ItemStack(Material.DIAMOND_SWORD),
-                    ItemStack(Material.NETHERITE_SWORD),
+                    ItemType.WOODEN_SWORD.createItemStack(),
+                    ItemType.STONE_SWORD.createItemStack(),
+                    ItemType.IRON_SWORD.createItemStack(),
+                    ItemType.GOLDEN_SWORD.createItemStack(),
+                    ItemType.DIAMOND_SWORD.createItemStack(),
+                    ItemType.NETHERITE_SWORD.createItemStack(),
                 )
-                "shears" -> listOf(ItemStack(Material.SHEARS))
-                "shield" -> listOf(ItemStack(Material.SHIELD))
-                "fishing" -> listOf(ItemStack(Material.FISHING_ROD))
+                "shears" -> listOf(ItemType.SHEARS.createItemStack())
+                "shield" -> listOf(ItemType.SHIELD.createItemStack())
+                "fishing" -> listOf(ItemType.FISHING_ROD.createItemStack())
                 else -> listOf(ItemStack.empty())
             }
         }
@@ -139,14 +144,14 @@ sealed class ToolActionIngredient : RecipeChoice {
         @Deprecated("")
         override fun getItemStack(): ItemStack {
             return when (action.actionName.split("_").getOrNull(0)) {
-                "axe" -> ItemStack(Material.WOODEN_AXE)
-                "pickaxe" -> ItemStack(Material.WOODEN_PICKAXE)
-                "shovel" -> ItemStack(Material.WOODEN_SHOVEL)
-                "hoe", "till" -> ItemStack(Material.WOODEN_HOE)
-                "sword" -> ItemStack(Material.WOODEN_SWORD)
-                "shears" -> ItemStack(Material.SHEARS)
-                "shield" -> ItemStack(Material.SHIELD)
-                "fishing" -> ItemStack(Material.FISHING_ROD)
+                "axe" -> ItemType.WOODEN_AXE.createItemStack()
+                "pickaxe" -> ItemType.WOODEN_PICKAXE.createItemStack()
+                "shovel" -> ItemType.WOODEN_SHOVEL.createItemStack()
+                "hoe", "till" -> ItemType.WOODEN_HOE.createItemStack()
+                "sword" -> ItemType.WOODEN_SWORD.createItemStack()
+                "shears" -> ItemType.SHEARS.createItemStack()
+                "shield" -> ItemType.SHIELD.createItemStack()
+                "fishing" -> ItemType.FISHING_ROD.createItemStack()
                 else -> ItemStack.empty()
             }
         }

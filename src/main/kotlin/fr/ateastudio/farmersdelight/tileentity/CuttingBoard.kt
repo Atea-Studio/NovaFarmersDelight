@@ -7,50 +7,59 @@ import fr.ateastudio.farmersdelight.block.fullnessSlots
 import fr.ateastudio.farmersdelight.recipe.cuttingboard.CuttingBoardRecipe
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
+import fr.ateastudio.farmersdelight.tileentity.display.ItemDisplaySpec
+import fr.ateastudio.farmersdelight.tileentity.display.PacketItemDisplays
+import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedHopperAccess
 import fr.ateastudio.farmersdelight.util.counterClockWise
 import fr.ateastudio.farmersdelight.util.isKnife
 import fr.ateastudio.farmersdelight.util.random
 import fr.ateastudio.farmersdelight.util.runOnMainThread
-import xyz.xenondevs.nova.world.block.novaTileEntity
 import fr.ateastudio.farmersdelight.util.safeGive
 import fr.ateastudio.farmersdelight.util.spawnItemEntity
+import io.papermc.paper.registry.RegistryAccess
+import io.papermc.paper.registry.RegistryKey
+import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys
 import net.kyori.adventure.text.Component
 import org.bukkit.GameMode
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
-import org.bukkit.Tag
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.enchantments.Enchantment
-import fr.ateastudio.farmersdelight.tileentity.display.ItemDisplaySpec
-import fr.ateastudio.farmersdelight.tileentity.display.PacketItemDisplays
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
 import org.joml.Matrix4f
 import xyz.xenondevs.cbf.Compound
 import xyz.xenondevs.invui.inventory.VirtualInventory
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
+import xyz.xenondevs.nova.util.CubeFaceMap
+import xyz.xenondevs.nova.util.playSound
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockTypeOrNull
+import xyz.xenondevs.nova.world.block.novaTileEntity
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
 import xyz.xenondevs.nova.world.block.tileentity.NetworkedTileEntity
 import xyz.xenondevs.nova.world.block.tileentity.network.type.NetworkConnectionType
-import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedHopperAccess
-import xyz.xenondevs.nova.util.CubeFaceMap
 import xyz.xenondevs.nova.world.block.tileentity.network.type.item.inventory.NetworkedInventory
+import xyz.xenondevs.nova.world.item.itemType
 import xyz.xenondevs.nova.world.item.recipe.RecipeManager
-import xyz.xenondevs.nova.util.center
-import xyz.xenondevs.nova.util.playSound
-import xyz.xenondevs.nova.util.playSoundNearby
 
 private const val STACK_ITEM_Y_OFFSET = 0.03
 private const val STACK_ITEM_HORIZONTAL_OFFSET = 0.075
 private const val MAX_CUTTING_BOARD_STACK_SIZE = 64
 
+private val CARVEABLE_TOOL_TYPES by lazy {
+    val registry = RegistryAccess.registryAccess().getRegistry(RegistryKey.ITEM)
+    listOf(ItemTypeTagKeys.SWORDS, ItemTypeTagKeys.AXES, ItemTypeTagKeys.PICKAXES, ItemTypeTagKeys.HOES, ItemTypeTagKeys.SHOVELS)
+        .flatMapTo(HashSet()) { registry.getTagValues(it) }
+}
+
+@Suppress("UnstableApiUsage")
 class CuttingBoard(
     block: Block,
     state: NovaBlockState,
@@ -66,6 +75,7 @@ class CuttingBoard(
 
     // Inventory access is exposed on every side, at vanilla hopper/dropper speed.
     private val hopperAccess = RateLimitedHopperAccess(storedItemInventory)
+    @Suppress("unused")
     private val itemHolder = storedItemHolder(
         hopperAccess.merged to NetworkConnectionType.BUFFER,
         hopperAccess.single to NetworkConnectionType.BUFFER,
@@ -160,15 +170,10 @@ class CuttingBoard(
     /** Equivalent of the original's `TieredItem || TridentItem || ShearsItem` carving check. */
     private fun isCarveableTool(item: ItemStack): Boolean {
         if (item.isEmpty) return false
-        val type = item.type
         return item.isKnife() ||
-            type == Material.SHEARS ||
-            type == Material.TRIDENT ||
-            Tag.ITEMS_SWORDS.isTagged(type) ||
-            Tag.ITEMS_AXES.isTagged(type) ||
-            Tag.ITEMS_PICKAXES.isTagged(type) ||
-            Tag.ITEMS_HOES.isTagged(type) ||
-            Tag.ITEMS_SHOVELS.isTagged(type)
+            item.itemType == ItemType.SHEARS ||
+            item.itemType == ItemType.TRIDENT ||
+            item.itemType in CARVEABLE_TOOL_TYPES
     }
 
     /** Carves [tool] onto the board; only succeeds if the board is currently empty. */
@@ -227,17 +232,18 @@ class CuttingBoard(
 
     /** Recipe sound first; otherwise shears, knife chopping, the held block's breaking sound, then wood breaking. */
     private fun playProcessingSound(sound: String?, tool: ItemStack) {
-        val type = tool.type
+        val itemType = tool.itemType
+        val blockType = itemType.blockTypeOrNull
         if (sound != null) {
             block.playSound(sound, SoundCategory.BLOCKS, 1f, 1f)
-        } else if (type == Material.SHEARS) {
-            block.location.playSoundNearby(Sound.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1f, 1f)
+        } else if (itemType == ItemType.SHEARS) {
+            block.world.playSound(block.location, Sound.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1f, 1f)
         } else if (tool.isKnife()) {
             block.playSound(Sounds.BLOCK_CUTTING_BOARD_KNIFE, SoundCategory.BLOCKS, 0.8f, 1f)
-        } else if (type.isBlock) {
-            block.location.playSoundNearby(type.createBlockData().soundGroup.breakSound, SoundCategory.BLOCKS, 1f, 0.8f)
+        } else if (blockType != null) {
+            block.world.playSound(block.location, blockType.createBlockData().soundGroup.breakSound, SoundCategory.BLOCKS, 1f, 0.8f)
         } else {
-            block.location.playSoundNearby(Sound.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 1f, 0.8f)
+            block.world.playSound(block.location, Sound.BLOCK_WOOD_BREAK, SoundCategory.BLOCKS, 1f, 0.8f)
         }
     }
 
@@ -281,7 +287,7 @@ class CuttingBoard(
     }
 
     private fun getStackedItemLocation(item: ItemStack, stackIndex: Int): Location {
-        val random = java.util.Random(item.type.key.toString().hashCode().toLong())
+        val random = java.util.Random(item.itemType.key.asString().hashCode().toLong())
         var xOffset = 0.0
         var zOffset = 0.0
         repeat(stackIndex + 1) {
@@ -304,5 +310,5 @@ class CuttingBoard(
     }
 
     private fun getDisplayLocation(): Location =
-        block.location.center().add(0.0, 0.05, 0.0)
+        block.location.clone().add(0.5, 0.05, 0.5)
 }

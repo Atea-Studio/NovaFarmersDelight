@@ -2,7 +2,6 @@ package fr.ateastudio.farmersdelight.recipe.cuttingboard
 
 import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.Items
-import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.commons.collections.mapToArray
 import xyz.xenondevs.invui.gui.Gui
@@ -24,7 +23,7 @@ object CuttingBoardRecipeGroup : RecipeGroup<CuttingBoardRecipe>() {
             return if (resultStacks.size > index) {
                 resultStacks[index]
             } else {
-                ItemStack(Material.AIR)
+                ItemStack.empty()
             }
         }
         

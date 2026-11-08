@@ -19,12 +19,12 @@ import xyz.xenondevs.nova.world.item.createItemStack
  */
 object SkilletBehavior : BlockBehavior {
 
-    override suspend fun canPlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
+    override suspend fun canPlace(block: Block, data: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
         val player = ctx[BlockPlace.SOURCE_PLAYER] ?: return true
         return player.isSneaking
     }
 
     /** The block has no linked item type, so pick-block returns the stored skillet item. */
-    override fun pickBlockCreative(pos: Block, state: NovaBlockState, ctx: Context<BlockInteract>): ItemStack? =
-        (pos.novaTileEntity as? Skillet)?.skilletItem() ?: Items.SKILLET.createItemStack()
+    override fun pickBlockCreative(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): ItemStack =
+        (block.novaTileEntity as? Skillet)?.skilletItem() ?: Items.SKILLET.createItemStack()
 }

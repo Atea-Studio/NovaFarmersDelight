@@ -3,38 +3,41 @@ package fr.ateastudio.farmersdelight.tileentity
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.ComparatorSignalSource
 import fr.ateastudio.farmersdelight.block.ComparatorSignals
-import fr.ateastudio.farmersdelight.block.comparatorFullness
-import fr.ateastudio.farmersdelight.block.fullnessSlots
 import fr.ateastudio.farmersdelight.block.CookingPotSupport
 import fr.ateastudio.farmersdelight.block.CookingPotSupportRules
+import fr.ateastudio.farmersdelight.block.comparatorFullness
+import fr.ateastudio.farmersdelight.block.fullnessSlots
 import fr.ateastudio.farmersdelight.gui.ProgressArrowItem
 import fr.ateastudio.farmersdelight.recipe.cookingpot.CookingPotRecipe
 import fr.ateastudio.farmersdelight.registry.GuiItems
 import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
+import fr.ateastudio.farmersdelight.tileentity.network.CookingPotServingInventory
+import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedNetworkedInventory
 import fr.ateastudio.farmersdelight.util.counterClockWise
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.isHeatedFromBelow
 import fr.ateastudio.farmersdelight.util.isTrayHeatSource
 import fr.ateastudio.farmersdelight.util.safeGive
+import io.papermc.paper.datacomponent.DataComponentTypes
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import io.papermc.paper.datacomponent.DataComponentTypes
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
+import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.ExperienceOrb
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
 import org.bukkit.util.Vector
 import xyz.xenondevs.cbf.Compound
 import xyz.xenondevs.commons.provider.mapNonNull
@@ -47,25 +50,21 @@ import xyz.xenondevs.invui.inventory.get
 import xyz.xenondevs.invui.item.AbstractItem
 import xyz.xenondevs.invui.item.ItemBuilder
 import xyz.xenondevs.invui.item.ItemProvider
-import org.bukkit.block.Block
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.ui.overlay.guitexture.getTitle
-import xyz.xenondevs.nova.util.add
+import xyz.xenondevs.nova.util.CubeFaceMap
 import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
-import xyz.xenondevs.nova.util.CubeFaceMap
 import xyz.xenondevs.nova.world.block.tileentity.NetworkedTileEntity
+import xyz.xenondevs.nova.world.block.tileentity.TileEntityMenu
 import xyz.xenondevs.nova.world.block.tileentity.network.type.NetworkConnectionType
 import xyz.xenondevs.nova.world.block.tileentity.network.type.item.inventory.NetworkedInventory
 import xyz.xenondevs.nova.world.block.tileentity.network.type.item.inventory.NetworkedVirtualInventory
-import fr.ateastudio.farmersdelight.tileentity.network.CookingPotServingInventory
-import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedNetworkedInventory
-import xyz.xenondevs.nova.world.block.tileentity.TileEntityMenu
 import xyz.xenondevs.nova.world.item.createItemStack
 import xyz.xenondevs.nova.world.item.isNova
 import xyz.xenondevs.nova.world.item.itemType
@@ -81,12 +80,13 @@ private const val CLICK_COOLDOWN_TIME: Long = 100
 internal fun retreatCookingProgress(progress: Int, total: Int): Int =
     (progress - 2).coerceIn(0, maxOf(total, 0))
 
+@Suppress("UnstableApiUsage")
 class CookingPot(
     block: Block,
     state: NovaBlockState,
     data: Compound
 ) : NetworkedTileEntity(block, state, data), ComparatorSignalSource {
-    private val validContainer = listOf(Material.BOWL, Material.BUCKET, Material.GLASS_BOTTLE, Material.PUMPKIN)
+    private val validContainer = listOf(ItemType.BOWL, ItemType.BUCKET, ItemType.GLASS_BOTTLE, ItemType.PUMPKIN)
     private val ingredientsInventory = storedInventory("ingredients_inventory", 6, postUpdateHandler = ::validateRecipe)
     private val mealStorageInventory = storedInventory("meal_display_slot", 1, true, IntArray(1) {99}, preUpdateHandler =  ::preventSteal, ::handleNewStoredItem)
     private val containerInventory = storedInventory("container_slot", 1, ::validateContainer, ::useContainer)
@@ -95,6 +95,7 @@ class CookingPot(
     // Top: the six ingredient slots only. Every other face: serving containers in, output out. Never the reservoir.
     private val networkedIngredients = RateLimitedNetworkedInventory(NetworkedVirtualInventory(ingredientsInventory))
     private val networkedServing = CookingPotServingInventory(containerInventory, outputInventory)
+        @Suppress("unused")
     private val itemHolder = storedItemHolder(
         networkedIngredients to NetworkConnectionType.BUFFER,
         networkedServing to NetworkConnectionType.BUFFER,
@@ -320,7 +321,7 @@ class CookingPot(
     }
     
     private fun validateContainer(event: ItemPreUpdateEvent) {
-        if (event.updateReason != SELF_UPDATE_REASON && event.newItem != null && !validContainer.contains(event.newItem!!.type)) {
+        if (event.updateReason != SELF_UPDATE_REASON && event.newItem != null && !validContainer.contains(event.newItem!!.itemType)) {
             event.isCancelled = true
         }
     }
@@ -522,7 +523,7 @@ class CookingPot(
             }
     }
     
-    private inner class HeatedInfoItem : AbstractItem() {
+    private class HeatedInfoItem : AbstractItem() {
         
         var heated: Boolean = false
             set(value) {
@@ -553,7 +554,7 @@ class CookingPot(
             ". . f . . b . o ."
         )
         .addIngredient('i', ingredientsInventory)
-        .addIngredient('t', progressionInfoItem)
+        .addIngredient('t', progressionInfoItem.item)
         .addIngredient('p', mealStorageInventory)
         .addIngredient('f', heatedInfoItem)
         .addIngredient('b', containerInventory)

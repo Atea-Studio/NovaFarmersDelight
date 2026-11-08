@@ -5,23 +5,25 @@ import fr.ateastudio.farmersdelight.nms.Nms
 import fr.ateastudio.farmersdelight.registry.Sounds
 import fr.ateastudio.farmersdelight.tileentity.display.ItemDisplaySpec
 import fr.ateastudio.farmersdelight.tileentity.display.PacketItemDisplays
-import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.findCampfireRecipe
-import fr.ateastudio.farmersdelight.util.safeGive
+import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.random
+import fr.ateastudio.farmersdelight.util.safeGive
+import io.papermc.paper.registry.RegistryAccess
+import io.papermc.paper.registry.RegistryKey
+import io.papermc.paper.registry.keys.tags.ItemTypeTagKeys
 import org.bukkit.GameMode
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.SoundCategory
-import org.bukkit.Tag
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
 import org.bukkit.util.BoundingBox
 import org.joml.Matrix4f
 import xyz.xenondevs.cbf.Compound
@@ -29,16 +31,20 @@ import xyz.xenondevs.invui.inventory.VirtualInventory
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
-import xyz.xenondevs.nova.util.center
 import xyz.xenondevs.nova.util.playSound
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.state.property.DefaultBlockStateProperties
 import xyz.xenondevs.nova.world.block.tileentity.TileEntity
+import xyz.xenondevs.nova.world.item.itemType
 
 private const val SLOT_COUNT = 6
 private const val DISPLAY_HEIGHT = 1.02
 private const val DISPLAY_SCALE = 0.375f
+private val SHOVEL_ITEM_TYPES by lazy {
+    RegistryAccess.registryAccess().getRegistry(RegistryKey.ITEM).getTagValues(ItemTypeTagKeys.SHOVELS).toSet()
+}
+
 private val SLOT_OFFSETS = arrayOf(
     Pair(0.3, 0.2), Pair(0.0, 0.2), Pair(-0.3, 0.2),
     Pair(0.3, -0.2), Pair(0.0, -0.2), Pair(-0.3, -0.2)
@@ -73,6 +79,7 @@ internal fun stoveSlotOffset(slot: Int, facing: BlockFace): Pair<Double, Double>
     return Pair(x * cos + y * sin, -x * sin + y * cos)
 }
 
+@Suppress("UnstableApiUsage")
 class Stove(
     block: Block,
     state: NovaBlockState,
@@ -129,13 +136,13 @@ class Stove(
     }
 
     private fun tryIgnite(heldItem: ItemStack, player: Player): InteractionResult? {
-        if (heldItem.type == Material.FLINT_AND_STEEL) {
+        if (heldItem.itemType == ItemType.FLINT_AND_STEEL) {
             block.playSound(Sound.ITEM_FLINTANDSTEEL_USE, 1f, block.world.random().nextFloat() * 0.4f + 0.8f)
             setLit(true)
             if (player.gameMode != GameMode.CREATIVE) heldItem.damage(1, player)
             return InteractionResult.Success()
         }
-        if (heldItem.type == Material.FIRE_CHARGE) {
+        if (heldItem.itemType == ItemType.FIRE_CHARGE) {
             block.playSound(Sound.ITEM_FIRECHARGE_USE, 1f, 1f)
             setLit(true)
             if (player.gameMode != GameMode.CREATIVE) heldItem.subtract()
@@ -145,13 +152,13 @@ class Stove(
     }
 
     private fun tryExtinguish(heldItem: ItemStack, player: Player, hand: EquipmentSlot): InteractionResult? {
-        if (Tag.ITEMS_SHOVELS.isTagged(heldItem.type)) {
+        if (heldItem.itemType in SHOVEL_ITEM_TYPES) {
             block.playSound(Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f)
             setLit(false)
             if (player.gameMode != GameMode.CREATIVE) heldItem.damage(1, player)
             return InteractionResult.Success()
         }
-        if (heldItem.type == Material.WATER_BUCKET) {
+        if (heldItem.itemType == ItemType.WATER_BUCKET) {
             block.playSound(Sound.ITEM_BUCKET_EMPTY, 1f, 1f)
             setLit(false)
             if (player.gameMode != GameMode.CREATIVE) {
@@ -275,7 +282,7 @@ class Stove(
         val xOffset = if (facing == BlockFace.EAST || facing == BlockFace.WEST) facing.direction.x * 0.52 else horizontalOffset
         val zOffset = if (facing == BlockFace.NORTH || facing == BlockFace.SOUTH) facing.direction.z * 0.52 else horizontalOffset
         val yOffset = random.nextDouble() * 6.0 / 16.0
-        val location = block.location.center().add(xOffset, yOffset - 0.5, zOffset)
+        val location = block.location.toCenterLocation().add(xOffset, yOffset - 0.5, zOffset)
         block.world.spawnParticle(Particle.SMOKE, location, 1, 0.0, 0.0, 0.0, 0.0)
         block.world.spawnParticle(Particle.FLAME, location, 1, 0.0, 0.0, 0.0, 0.0)
     }

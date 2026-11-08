@@ -42,20 +42,20 @@ abstract class PieBlock : BlockBehavior {
         return 4
     }
     
-    override fun handlePlace(pos: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
+    override fun handlePlace(block: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
         state[BlockStateProperties.BITES] = 0
-        pos.blockData = state
+        block.blockData = state
     }
     
-    override fun useItemOn(pos: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
         if (player != null) {
             val heldStack = ctx[BlockInteract.HELD_ITEM_STACK]
             if (heldStack.isKnife()) {
-                return cutSlice(pos, state, player)
+                return cutSlice(block, state, player)
             }
             
-            if (consumeBite(pos, state, player)) {
+            if (consumeBite(block, state, player)) {
                 return InteractionResult.Success()
             }
         }

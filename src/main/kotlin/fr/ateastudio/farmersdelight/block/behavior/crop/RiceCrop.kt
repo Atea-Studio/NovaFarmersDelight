@@ -5,13 +5,12 @@ import fr.ateastudio.farmersdelight.block.behavior.isWaterloggedMuddyFarmland
 import fr.ateastudio.farmersdelight.registry.Blocks
 import fr.ateastudio.farmersdelight.registry.Items
 import org.bukkit.GameRules
-import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
+import org.bukkit.block.BlockType
 import org.bukkit.block.data.Levelled
 import org.bukkit.inventory.ItemType
 import xyz.xenondevs.nova.registry.RegistryEntry
-import xyz.xenondevs.nova.util.add
 import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.blockType
@@ -40,23 +39,23 @@ object RiceCrop : BerryBlock() {
         
     }
     
-    override fun handleRandomTick(pos: Block, state: NovaBlockState) {
-        val lightLevel = getRawBrightness(pos)
-        if (lightLevel >= 9 && pos.below.isWaterloggedMuddyFarmland()) {
+    override fun handleRandomTick(block: Block, state: NovaBlockState) {
+        val lightLevel = getRawBrightness(block)
+        if (lightLevel >= 9 && block.below.isWaterloggedMuddyFarmland()) {
             val age = getAge(state)
             val maxAge = getMaxAge(state)
             if (age < maxAge) {
-                val growSpeed = getGrowthSpeed(pos)
-                val tickSpeedMultiplier = pos.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
+                val growSpeed = getGrowthSpeed(block)
+                val tickSpeedMultiplier = block.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
                 (1..tickSpeedMultiplier).forEach { _ ->
                     if (Random.nextInt(((25.0F / growSpeed) + 1).toInt()) == 0) {
-                        growCrop(pos, state)
+                        growCrop(block, state)
                     }
                 }
             }
         }
-        if (!canSurvive(state, pos)) {
-            breakBlock(pos)
+        if (!canSurvive(state, block)) {
+            breakBlock(block)
         }
     }
     
@@ -69,10 +68,10 @@ object RiceCrop : BerryBlock() {
         for (xOffset in -1..1) {
             for (zOffset in -1..1) {
                 var individualSpeed = 0.0f
-                val adjacentBlock = belowBlockPos.add(xOffset, 0, zOffset)
+                val adjacentBlock = belowBlockPos.getRelative(xOffset, 0, zOffset)
                 
                 // Check if block is farmland
-                if (adjacentBlock.type == Material.FARMLAND) {
+                if (adjacentBlock.blockType == BlockType.FARMLAND) {
                     individualSpeed = 1.0f
                     val blockData = adjacentBlock.blockData
                     if (blockData is Levelled && blockData.level > 0) {
@@ -95,18 +94,18 @@ object RiceCrop : BerryBlock() {
         val westBlock = cropBlock.getRelative(BlockFace.WEST)
         val eastBlock = cropBlock.getRelative(BlockFace.EAST)
         
-        val hasHorizontalAdjacent = (westBlock.type == cropBlock.type || eastBlock.type == cropBlock.type)
-        val hasVerticalAdjacent = (northBlock.type == cropBlock.type || southBlock.type == cropBlock.type)
+        val hasHorizontalAdjacent = (westBlock.blockType == cropBlock.blockType || eastBlock.blockType == cropBlock.blockType)
+        val hasVerticalAdjacent = (northBlock.blockType == cropBlock.blockType || southBlock.blockType == cropBlock.blockType)
         
         // If both horizontal and vertical adjacent crops exist, reduce growth speed
         if (hasHorizontalAdjacent && hasVerticalAdjacent) {
             growthSpeed /= 2.0f
         } else {
             // Check for diagonal adjacent crops
-            val hasDiagonalAdjacent = (northBlock.getRelative(BlockFace.WEST).type == cropBlock.type ||
-                northBlock.getRelative(BlockFace.EAST).type == cropBlock.type ||
-                southBlock.getRelative(BlockFace.WEST).type == cropBlock.type ||
-                southBlock.getRelative(BlockFace.EAST).type == cropBlock.type)
+            val hasDiagonalAdjacent = (northBlock.getRelative(BlockFace.WEST).blockType == cropBlock.blockType ||
+                northBlock.getRelative(BlockFace.EAST).blockType == cropBlock.blockType ||
+                southBlock.getRelative(BlockFace.WEST).blockType == cropBlock.blockType ||
+                southBlock.getRelative(BlockFace.EAST).blockType == cropBlock.blockType)
             
             if (hasDiagonalAdjacent) {
                 growthSpeed /= 2.0f
