@@ -19,13 +19,14 @@ internal fun hopperRateLimiter() = TransferRateLimiter {
  * Inserts at most [limiter]'s allowance through [insert] and records what was actually accepted.
  * @return the leftover amount, as required by [NetworkedInventory.add].
  */
-internal inline fun rateLimitedAdd(limiter: TransferRateLimiter, amount: Int, insert: (Int) -> Int): Int {
-    val allowed = min(amount, limiter.allowance(Bukkit.getCurrentTick().toLong()))
-    if (allowed <= 0) return amount
-    val added = allowed - insert(allowed)
-    limiter.consume(added)
-    return amount - added
-}
+internal inline fun rateLimitedAdd(limiter: TransferRateLimiter, amount: Int, insert: (Int) -> Int): Int =
+    synchronized(limiter) {
+        val allowed = min(amount, limiter.allowance(Bukkit.getCurrentTick().toLong()))
+        if (allowed <= 0) return@synchronized amount
+        val added = allowed - insert(allowed)
+        limiter.consume(added)
+        amount - added
+    }
 
 /** A [NetworkedVirtualInventory] whose automated insertion follows vanilla hopper speed. */
 internal class RateLimitedNetworkedInventory(
