@@ -36,5 +36,6 @@
       "amount": 1
     }
   ],
-  "result": "farmersdelight:stuffed_pumpkin_block"
+  "result": "farmersdelight:stuffed_pumpkin_block",
+  "container": "minecraft:pumpkin"
 }

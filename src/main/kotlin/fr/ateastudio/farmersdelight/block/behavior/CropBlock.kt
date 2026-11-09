@@ -1,9 +1,11 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
+import xyz.xenondevs.nova.world.item.createItemStack
+
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import org.bukkit.GameMode
 import org.bukkit.GameRules
-import org.bukkit.Material
+import org.bukkit.block.BlockType
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.block.BlockFace
@@ -13,29 +15,33 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.Ravager
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.ItemType
+import org.bukkit.block.Block
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.context.intention.BlockPlace
+import xyz.xenondevs.nova.registry.RegistryEntry
 import xyz.xenondevs.nova.util.BlockUtils
-import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
-import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.util.below
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
-import xyz.xenondevs.nova.world.item.NovaItem
+import xyz.xenondevs.nova.world.block.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockType
+import xyz.xenondevs.nova.world.item.itemType
 import kotlin.random.Random
 
 
+@Suppress("UnstableApiUsage")
 abstract class CropBlock : BlockBehavior {
     open val dropProbability = 0.57
     open val badCropResultProbability = 0.05f
     
-    abstract fun resultItem() : NovaItem?
-    protected open fun badResultItem() : NovaItem? = null
-    abstract fun seedItem() : NovaItem?
+    abstract fun resultItem(): RegistryEntry.Paper<ItemType>?
+    protected open fun badResultItem(): RegistryEntry.Paper<ItemType>? = null
+    abstract fun seedItem(): RegistryEntry.Paper<ItemType>?
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+    override fun getDrops(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         val player = ctx[BlockBreak.SOURCE_PLAYER]
         val tool = ctx[BlockBreak.TOOL_ITEM_STACK]
         val seedItem = seedItem()
@@ -46,14 +52,14 @@ abstract class CropBlock : BlockBehavior {
         }
         if (isMaxAge(state)) {
             val result = mutableListOf<ItemStack>()
-            if (seedItem is NovaItem) {
+            if (seedItem != null) {
                 // Determine the amount of drops, with possible modification from the Fortune enchantment
                 val fortuneLevel = tool.getEnchantmentLevel(Enchantment.FORTUNE)
                 val quantity = simulateBinomialDrops(fortuneLevel)
                 result.add(seedItem.createItemStack(quantity))
             }
-            if (resultItem is NovaItem) {
-                if (badResultItem is NovaItem && Random.nextFloat() < badCropResultProbability) {
+            if (resultItem != null) {
+                if (badResultItem != null && Random.nextFloat() < badCropResultProbability) {
                     result.add(badResultItem.createItemStack())
                 }
                 else {
@@ -63,23 +69,23 @@ abstract class CropBlock : BlockBehavior {
             return result
         }
         else {
-            if (seedItem is NovaItem) {
+            if (seedItem != null) {
                 return listOf(seedItem.createItemStack())
             }
             return listOf()
         }
     }
     
-    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER] ?: return InteractionResult.Pass
         val hand = ctx[BlockInteract.HELD_HAND]
         val itemStack = if (hand == EquipmentSlot.HAND) player.inventory.itemInMainHand else player.inventory.itemInOffHand
         
-        if (itemStack.type == Material.BONE_MEAL && isValidBoneMealTarget(state)) {
+        if (itemStack.itemType == ItemType.BONE_MEAL && isValidBoneMealTarget(state)) {
             if (player.gameMode != GameMode.CREATIVE) {
                 itemStack.subtract()
             }
-            performBoneMeal(pos, state)
+            performBoneMeal(block, state)
             return InteractionResult.Success()
         }
         return InteractionResult.Pass
@@ -90,40 +96,40 @@ abstract class CropBlock : BlockBehavior {
         return shouldTick
     }
     
-    override fun handleRandomTick(pos: BlockPos, state: NovaBlockState) {
-        val lightLevel = getRawBrightness(pos)
+    override fun handleRandomTick(block: Block, state: NovaBlockState) {
+        val lightLevel = getRawBrightness(block)
         
         if (lightLevel >= 9) {
             val age = getAge(state)
             if (age < getMaxAge(state)) {
-                val growSpeed = getGrowthSpeed(pos)
-                val tickSpeedMultiplier = pos.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
+                val growSpeed = getGrowthSpeed(block)
+                val tickSpeedMultiplier = block.world.getGameRuleValue(GameRules.RANDOM_TICK_SPEED) / 3
                 repeat(tickSpeedMultiplier) {
                 if (Random.nextInt(((25.0F / growSpeed) + 1).toInt()) == 0) {
-                        growCrop(pos, state)
+                        growCrop(block, state)
                     }
                 }
             }
         }
-        if (!canSurvive(state, pos)) {
-            breakBlock(pos)
+        if (!canSurvive(state, block)) {
+            breakBlock(block)
         }
     }
     
-    override fun handleNeighborChanged(pos: BlockPos, state: NovaBlockState) {
-        if (!canSurvive(state, pos)) {
-            breakBlock(pos)
+    override fun handleNeighborChanged(block: Block, state: NovaBlockState) {
+        if (!canSurvive(state, block)) {
+            breakBlock(block)
         }
     }
     
-    override fun handleEntityInside(pos: BlockPos, state: NovaBlockState, entity: Entity) {
-        if (entity is Ravager && pos.world.getGameRuleValue(GameRules.MOB_GRIEFING) == true) {
-            pos.block.breakNaturally()
+    override fun handleEntityInside(block: Block, state: NovaBlockState, entity: Entity) {
+        if (entity is Ravager && block.world.getGameRuleValue(GameRules.MOB_GRIEFING) == true) {
+            block.breakNaturally()
         }
     }
     
-    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
-        return mayPlaceOn(pos.below, state) && pos.block.isEmpty
+    override suspend fun canPlace(block: Block, data: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
+        return mayPlaceOn(block.below, data) && block.isEmpty
     }
     
     protected fun getMaxAge(state: NovaBlockState): Int {
@@ -135,21 +141,23 @@ abstract class CropBlock : BlockBehavior {
     }
     
     protected fun getStateForAge(state: NovaBlockState, age: Int) : NovaBlockState {
-        return state.with(BlockStateProperties.AGE, age)
+        val newState = state.clone()
+        newState[BlockStateProperties.AGE] = age
+        return newState
     }
     
     protected fun isMaxAge(state: NovaBlockState) : Boolean {
         return getAge(state) == getMaxAge(state)
     }
     
-    protected open fun growCrop(pos: BlockPos, state: NovaBlockState, amount: Int = 1) {
+    protected open fun growCrop(pos: Block, state: NovaBlockState, amount: Int = 1) {
         if (!isMaxAge(state)) {
             val age = getAge(state) + amount
             val maxAge = getMaxAge(state)
             if (age > maxAge)
-                updateBlockState(pos, getStateForAge(state, maxAge))
+                pos.blockData = getStateForAge(state, maxAge)
             else
-                updateBlockState(pos, getStateForAge(state, age))
+                pos.blockData = getStateForAge(state, age)
         }
     }
     
@@ -160,8 +168,8 @@ abstract class CropBlock : BlockBehavior {
         return Random.nextInt(min, max + 1)
     }
     
-    private fun getGrowthSpeed(blockPos: BlockPos): Float {
-        val cropBlock= blockPos.block
+    private fun getGrowthSpeed(blockPos: Block): Float {
+        val cropBlock = blockPos
         var growthSpeed = 1.0f
         val belowBlockPos = blockPos.below
         
@@ -169,11 +177,10 @@ abstract class CropBlock : BlockBehavior {
         for (xOffset in -1..1) {
             for (zOffset in -1..1) {
                 var individualSpeed = 0.0f
-                val adjacentBlockPos = belowBlockPos.add(xOffset, 0, zOffset)
-                val adjacentBlock = adjacentBlockPos.block
+                val adjacentBlock = belowBlockPos.getRelative(xOffset, 0, zOffset)
                 
                 // Check if block is farmland
-                if (adjacentBlock.type == Material.FARMLAND) {
+                if (adjacentBlock.blockType == BlockType.FARMLAND) {
                     individualSpeed = 1.0f
                     val blockData = adjacentBlock.blockData
                     if (blockData is Levelled && blockData.level > 0) {
@@ -196,18 +203,18 @@ abstract class CropBlock : BlockBehavior {
         val westBlock = cropBlock.getRelative(BlockFace.WEST)
         val eastBlock = cropBlock.getRelative(BlockFace.EAST)
         
-        val hasHorizontalAdjacent = (westBlock.type == cropBlock.type || eastBlock.type == cropBlock.type)
-        val hasVerticalAdjacent = (northBlock.type == cropBlock.type || southBlock.type == cropBlock.type)
+        val hasHorizontalAdjacent = (westBlock.blockType == cropBlock.blockType || eastBlock.blockType == cropBlock.blockType)
+        val hasVerticalAdjacent = (northBlock.blockType == cropBlock.blockType || southBlock.blockType == cropBlock.blockType)
         
         // If both horizontal and vertical adjacent crops exist, reduce growth speed
         if (hasHorizontalAdjacent && hasVerticalAdjacent) {
             growthSpeed /= 2.0f
         } else {
             // Check for diagonal adjacent crops
-            val hasDiagonalAdjacent = (northBlock.getRelative(BlockFace.WEST).type == cropBlock.type ||
-                northBlock.getRelative(BlockFace.EAST).type == cropBlock.type ||
-                southBlock.getRelative(BlockFace.WEST).type == cropBlock.type ||
-                southBlock.getRelative(BlockFace.EAST).type == cropBlock.type)
+            val hasDiagonalAdjacent = (northBlock.getRelative(BlockFace.WEST).blockType == cropBlock.blockType ||
+                northBlock.getRelative(BlockFace.EAST).blockType == cropBlock.blockType ||
+                southBlock.getRelative(BlockFace.WEST).blockType == cropBlock.blockType ||
+                southBlock.getRelative(BlockFace.EAST).blockType == cropBlock.blockType)
             
             if (hasDiagonalAdjacent) {
                 growthSpeed /= 2.0f
@@ -217,12 +224,12 @@ abstract class CropBlock : BlockBehavior {
         return growthSpeed
     }
     
-    protected open fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
+    protected open fun canSurvive(state: NovaBlockState, pos: Block): Boolean {
         val blockBelow = pos.below
         return mayPlaceOn(blockBelow, state)
     }
     
-    protected open fun hasSufficientLight(pos: BlockPos): Boolean {
+    protected open fun hasSufficientLight(pos: Block): Boolean {
         return (getRawBrightness(pos) >= 8)
     }
     
@@ -230,13 +237,13 @@ abstract class CropBlock : BlockBehavior {
         return !isMaxAge(state)
     }
     
-    protected open fun performBoneMeal(pos: BlockPos, state: NovaBlockState) {
+    protected open fun performBoneMeal(pos: Block, state: NovaBlockState) {
         val amount = getBonemealAgeIncrease(state)
         growCrop(pos, state, amount)
         showBoneMealParticle(pos)
     }
     
-    protected fun showBoneMealParticle(pos: BlockPos) {
+    protected fun showBoneMealParticle(pos: Block) {
         
         // Spawn the "happy villager" particles (green particles like bone meal effect)
         pos.world.spawnParticle(
@@ -249,16 +256,16 @@ abstract class CropBlock : BlockBehavior {
         pos.world.playSound(pos.location, Sound.ITEM_BONE_MEAL_USE, 1.0f, 1.0f)
     }
     
-    protected fun getRawBrightness(pos: BlockPos): Byte {
-        return if (pos.block.lightLevel < pos.block.lightFromSky) {
-            pos.block.lightFromSky
+    protected fun getRawBrightness(pos: Block): Byte {
+        return if (pos.lightLevel < pos.lightFromSky) {
+            pos.lightFromSky
         } else {
-            pos.block.lightLevel
+            pos.lightLevel
         }
     }
     
-    protected open fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
-        return pos.block.type == Material.FARMLAND && hasSufficientLight(pos)
+    protected open fun mayPlaceOn(pos: Block, state: NovaBlockState): Boolean {
+        return pos.blockType == BlockType.FARMLAND && hasSufficientLight(pos)
     }
     
     protected fun simulateBinomialDrops(fortuneLevel: Int): Int {
@@ -275,9 +282,9 @@ abstract class CropBlock : BlockBehavior {
         return seedDrops.coerceAtLeast(1) // Ensure at least 1 seed drops
     }
     
-    protected fun breakBlock(position: BlockPos){
+    protected fun breakBlock(position: Block){
         val context = Context.intention(BlockBreak)
-            .param(BlockBreak.BLOCK_POS, position)
+            .param(BlockBreak.BLOCK, position)
             .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
             .build()
         

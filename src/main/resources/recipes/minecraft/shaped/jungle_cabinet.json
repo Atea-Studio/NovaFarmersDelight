@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:jungle_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:jungle_slab",
+    "d": "minecraft:jungle_trapdoor"
+  }
+}

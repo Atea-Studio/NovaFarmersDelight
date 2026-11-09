@@ -2,29 +2,31 @@ package fr.ateastudio.farmersdelight.block.behavior.crop
 
 import fr.ateastudio.farmersdelight.block.behavior.CropBlock
 import fr.ateastudio.farmersdelight.registry.Items
-import org.bukkit.Material
-import xyz.xenondevs.nova.world.BlockPos
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
-import xyz.xenondevs.nova.world.item.NovaItem
+import org.bukkit.block.Block
+import org.bukkit.block.BlockType
+import org.bukkit.inventory.ItemType
+import xyz.xenondevs.nova.registry.RegistryEntry
+import xyz.xenondevs.nova.world.block.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockType
 
 object OnionCrop : CropBlock() {
-    override fun resultItem(): NovaItem? {
+    override fun resultItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.ONION
-        } catch (e : Exception) {
+        } catch (_ : Exception) {
             null
         }
     }
     
-    override fun seedItem(): NovaItem? {
+    override fun seedItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.ONION
-        } catch (e : Exception) {
+        } catch (_ : Exception) {
             null
         }
     }
     
-    override fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
-        return pos.block.type == Material.FARMLAND && hasSufficientLight(pos)
+    override fun mayPlaceOn(pos: Block, state: NovaBlockState): Boolean {
+        return pos.blockType == BlockType.FARMLAND && hasSufficientLight(pos)
     }
 }

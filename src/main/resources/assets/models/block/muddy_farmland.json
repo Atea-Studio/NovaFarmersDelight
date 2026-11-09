@@ -1,21 +1,24 @@
 {
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
 	"parent": "minecraft:block/block",
 	"textures": {
+		"particle": "minecraft:block/mud",
 		"mud": "minecraft:block/mud",
-		"top": "farmersdelight:block/muddy_farmland_top",
-		"particle": "minecraft:block/mud"
+		"top": "farmersdelight:block/muddy_farmland_top"
 	},
 	"elements": [
 		{
 			"from": [0, 0, 0],
-			"to": [16, 15, 16],
+			"to": [16, 13, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [-21, 0, 11]},
 			"faces": {
-				"north": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "north"},
-				"east": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "east"},
-				"south": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "south"},
-				"west": {"uv": [0, 1, 16, 16], "texture": "#mud", "cullface": "west"},
+				"north": {"uv": [0, 3, 16, 16], "texture": "#mud"},
+				"east": {"uv": [0, 3, 16, 16], "texture": "#mud"},
+				"south": {"uv": [0, 3, 16, 16], "texture": "#mud"},
+				"west": {"uv": [0, 3, 16, 16], "texture": "#mud"},
 				"up": {"uv": [0, 0, 16, 16], "texture": "#top"},
-				"down": {"uv": [0, 0, 16, 16], "texture": "#mud", "cullface": "down"}
+				"down": {"uv": [0, 0, 16, 16], "texture": "#mud"}
 			}
 		}
 	]

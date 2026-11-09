@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:mangrove_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:mangrove_slab",
+    "d": "minecraft:mangrove_trapdoor"
+  }
+}

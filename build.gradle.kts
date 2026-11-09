@@ -1,5 +1,5 @@
 group = "fr.ateastudio.farmersdelight"
-version = "1.4.3"
+version = "1.5.0"
 
 plugins {
     alias(libs.plugins.kotlin)
@@ -14,6 +14,7 @@ repositories {
 
 dependencies {
     implementation(libs.nova)
+    testImplementation(kotlin("test"))
 }
 
 addon {

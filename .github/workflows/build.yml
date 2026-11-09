@@ -26,6 +26,9 @@ jobs:
       - name: Make Gradle Executable
         run: chmod +x gradlew
 
+      - name: Run Tests
+        run: ./gradlew test
+
       - name: Build Addons
         run: ./gradlew addonJar -PoutDir=artifacts
 

@@ -1,15 +1,15 @@
 package fr.ateastudio.farmersdelight.block.behavior.wildcrop
 
 import fr.ateastudio.farmersdelight.block.behavior.WildcropBlock
-import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
-import xyz.xenondevs.nova.util.item.toItemStack
+import org.bukkit.inventory.ItemType
 
+@Suppress("UnstableApiUsage")
 class WildPotatoes : WildcropBlock() {
     override fun seedItem(): ItemStack? {
         return try {
-            Material.POTATO.toItemStack()
-        } catch (e : Exception) {
+            ItemType.POTATO.createItemStack()
+        } catch (_ : Exception) {
             null
         }
     }

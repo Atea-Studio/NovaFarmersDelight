@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:warped_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:warped_slab",
+    "d": "minecraft:warped_trapdoor"
+  }
+}

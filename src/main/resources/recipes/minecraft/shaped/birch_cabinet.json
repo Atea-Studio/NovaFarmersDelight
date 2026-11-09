@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:birch_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:birch_slab",
+    "d": "minecraft:birch_trapdoor"
+  }
+}

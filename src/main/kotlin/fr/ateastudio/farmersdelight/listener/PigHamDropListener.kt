@@ -1,5 +1,8 @@
 package fr.ateastudio.farmersdelight.listener
 
+import fr.ateastudio.farmersdelight.NovaFarmersDelight
+import xyz.xenondevs.nova.world.item.createItemStack
+
 import fr.ateastudio.farmersdelight.registry.Items
 import fr.ateastudio.farmersdelight.util.isKnife
 import org.bukkit.enchantments.Enchantment
@@ -9,14 +12,13 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDeathEvent
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage
-import xyz.xenondevs.nova.util.registerEvents
 import kotlin.random.Random
 
 @Init(stage = InitStage.POST_WORLD)
 object PigHamDropListener : Listener {
     
     init {
-        this.registerEvents()
+        NovaFarmersDelight.plugin!!.server.pluginManager.registerEvents(this, NovaFarmersDelight.plugin!!)
     }
     
     @EventHandler

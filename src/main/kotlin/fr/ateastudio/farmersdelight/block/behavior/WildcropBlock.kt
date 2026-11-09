@@ -1,16 +1,18 @@
 package fr.ateastudio.farmersdelight.block.behavior
 
 import org.bukkit.GameMode
-import org.bukkit.Material
+import org.bukkit.block.Block
+import org.bukkit.block.BlockType
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockPlace
 import xyz.xenondevs.nova.util.BlockUtils
-import xyz.xenondevs.nova.world.BlockPos
+import xyz.xenondevs.nova.util.below
+import xyz.xenondevs.nova.world.block.NovaBlockState
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
+import xyz.xenondevs.nova.world.block.blockType
 import kotlin.random.Random
 
 
@@ -19,7 +21,7 @@ abstract class WildcropBlock : BlockBehavior {
     open val dropProbability = 0.57
     abstract fun seedItem() : ItemStack?
     
-    override fun getDrops(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
+    override fun getDrops(block: Block, state: NovaBlockState, ctx: Context<BlockBreak>): List<ItemStack> {
         val player = ctx[BlockBreak.SOURCE_PLAYER]
         val tool = ctx[BlockBreak.TOOL_ITEM_STACK]
         val seedItem = seedItem()
@@ -38,26 +40,26 @@ abstract class WildcropBlock : BlockBehavior {
         return result
     }
     
-    override fun handleNeighborChanged(pos: BlockPos, state: NovaBlockState) {
-        if (!canSurvive(state, pos)) {
-            breakBlock(pos)
+    override fun handleNeighborChanged(block: Block, state: NovaBlockState) {
+        if (!canSurvive(state, block)) {
+            breakBlock(block)
         }
     }
     
-    override suspend fun canPlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
-        return mayPlaceOn(pos.below, state) && pos.block.isEmpty
+    override suspend fun canPlace(block: Block, data: NovaBlockState, ctx: Context<BlockPlace>): Boolean {
+        return mayPlaceOn(block.below, data) && block.isEmpty
     }
     
-    protected open fun canSurvive(state: NovaBlockState, pos: BlockPos): Boolean {
+    protected open fun canSurvive(state: NovaBlockState, pos: Block): Boolean {
         val blockBelow = pos.below
         return mayPlaceOn(blockBelow, state)
     }
     
-    protected open fun mayPlaceOn(pos: BlockPos, state: NovaBlockState): Boolean {
-        return  pos.block.type == Material.ROOTED_DIRT ||
-                pos.block.type == Material.COARSE_DIRT ||
-                pos.block.type == Material.GRASS_BLOCK ||
-                pos.block.type == Material.DIRT
+    protected open fun mayPlaceOn(pos: Block, state: NovaBlockState): Boolean {
+        return  pos.blockType == BlockType.ROOTED_DIRT ||
+                pos.blockType == BlockType.COARSE_DIRT ||
+                pos.blockType == BlockType.GRASS_BLOCK ||
+                pos.blockType == BlockType.DIRT
     }
     
     protected fun simulateBinomialDrops(fortuneLevel: Int): Int {
@@ -74,9 +76,9 @@ abstract class WildcropBlock : BlockBehavior {
         return seedDrops.coerceAtLeast(1) // Ensure at least 1 seed drops
     }
     
-    protected fun breakBlock(position: BlockPos){
+    protected fun breakBlock(position: Block){
         val context = Context.intention(BlockBreak)
-            .param(BlockBreak.BLOCK_POS, position)
+            .param(BlockBreak.BLOCK, position)
             .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
             .build()
         

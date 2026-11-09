@@ -1,10 +1,12 @@
 package fr.ateastudio.farmersdelight.block.behavior.feastblock
 
+import xyz.xenondevs.nova.world.item.createItemStack
+
 import fr.ateastudio.farmersdelight.block.BlockStateProperties
 import fr.ateastudio.farmersdelight.block.behavior.FeastBlock
 import fr.ateastudio.farmersdelight.registry.Items
 import org.bukkit.inventory.ItemStack
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
+import xyz.xenondevs.nova.world.block.NovaBlockState
 
 object RiceRollMedleyBlock : FeastBlock(true) {
     
@@ -30,6 +32,14 @@ object RiceRollMedleyBlock : FeastBlock(true) {
         return try {
             map[servings - 1].createItemStack()
         } catch (_ : Exception) {
+            ItemStack.empty()
+        }
+    }
+    
+    override fun getFullBlockItem(): ItemStack {
+        return try {
+            Items.RICE_ROLL_MEDLEY_BLOCK.createItemStack()
+        } catch (e : Exception) {
             ItemStack.empty()
         }
     }

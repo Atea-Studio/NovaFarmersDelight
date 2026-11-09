@@ -22,14 +22,16 @@ import xyz.xenondevs.nova.context.Context
 import xyz.xenondevs.nova.context.intention.BlockBreak
 import xyz.xenondevs.nova.context.intention.BlockInteract
 import xyz.xenondevs.nova.context.intention.BlockPlace
+import org.bukkit.block.Block
 import xyz.xenondevs.nova.util.BlockUtils.breakBlockNaturally
-import xyz.xenondevs.nova.util.BlockUtils.updateBlockState
-import xyz.xenondevs.nova.world.BlockPos
 import xyz.xenondevs.nova.world.InteractionResult
 import xyz.xenondevs.nova.world.block.behavior.BlockBehavior
-import xyz.xenondevs.nova.world.block.state.NovaBlockState
+import xyz.xenondevs.nova.world.block.NovaBlockState
 import kotlin.random.Random
 
+
+internal fun saturationAfterFood(currentSaturation: Float, foodSaturation: Float, resultingHunger: Int): Float =
+    (currentSaturation + foodSaturation).coerceAtMost(resultingHunger.toFloat())
 
 @Suppress("UnstableApiUsage")
 abstract class PieBlock : BlockBehavior {
@@ -40,26 +42,27 @@ abstract class PieBlock : BlockBehavior {
         return 4
     }
     
-    override fun handlePlace(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockPlace>) {
-        updateBlockState(pos, state.with(BlockStateProperties.BITES, 0))
+    override fun handlePlace(block: Block, state: NovaBlockState, ctx: Context<BlockPlace>) {
+        state[BlockStateProperties.BITES] = 0
+        block.blockData = state
     }
     
-    override fun useItemOn(pos: BlockPos, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
+    override fun useItemOn(block: Block, state: NovaBlockState, ctx: Context<BlockInteract>): InteractionResult {
         val player = ctx[BlockInteract.SOURCE_PLAYER]
         if (player != null) {
             val heldStack = ctx[BlockInteract.HELD_ITEM_STACK]
             if (heldStack.isKnife()) {
-                return cutSlice(pos, state, player)
+                return cutSlice(block, state, player)
             }
             
-            if (consumeBite(pos, state, player)) {
+            if (consumeBite(block, state, player)) {
                 return InteractionResult.Success()
             }
         }
         return InteractionResult.Pass
     }
     
-    private fun consumeBite(pos: BlockPos, state: NovaBlockState, player: Player): Boolean {
+    private fun consumeBite(pos: Block, state: NovaBlockState, player: Player): Boolean {
         if (player.foodLevel >= 20 && player.gameMode != GameMode.CREATIVE) {
             return false
         }
@@ -75,7 +78,7 @@ abstract class PieBlock : BlockBehavior {
         
         // Simulate eating
         player.foodLevel = (player.foodLevel + food.nutrition()).coerceAtMost(20) // Adjust hunger level
-        player.saturation = (player.saturation + food.saturation()) // Adjust saturation
+        player.saturation = saturationAfterFood(player.saturation, food.saturation(), player.foodLevel) // Adjust saturation
         
         // Apply effects to player
         for (consumeEffect in consumeEffects) {
@@ -116,12 +119,13 @@ abstract class PieBlock : BlockBehavior {
         // Handle cake bites
         val bites = state[BlockStateProperties.BITES] ?: return false
         if (bites < getMaxBites() - 1) {
-            updateBlockState(pos, state.with(BlockStateProperties.BITES, bites + 1))
+            state[BlockStateProperties.BITES] = bites + 1
+            pos.blockData = state
         }
         else {
             pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, SoundCategory.PLAYERS, 0.8f, 0.8f)
             val ctx = Context.intention(BlockBreak)
-                .param(BlockBreak.BLOCK_POS, pos)
+                .param(BlockBreak.BLOCK, pos)
                 .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
                 .param(BlockBreak.SOURCE_PLAYER, player)
                 .param(BlockBreak.BLOCK_DROPS, true)
@@ -132,15 +136,16 @@ abstract class PieBlock : BlockBehavior {
         return true
     }
     
-    private fun cutSlice(pos: BlockPos, state: NovaBlockState, player: Player): InteractionResult {
+    private fun cutSlice(pos: Block, state: NovaBlockState, player: Player): InteractionResult {
         val bites = state[BlockStateProperties.BITES] ?: return InteractionResult.Fail
         if (bites < getMaxBites() - 1) {
-            updateBlockState(pos, state.with(BlockStateProperties.BITES, bites + 1))
+            state[BlockStateProperties.BITES] = bites + 1
+            pos.blockData = state
         }
         else {
             pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, SoundCategory.PLAYERS, 0.8f, 0.8f)
             val ctx = Context.intention(BlockBreak)
-                .param(BlockBreak.BLOCK_POS, pos)
+                .param(BlockBreak.BLOCK, pos)
                 .param(BlockBreak.BLOCK_BREAK_EFFECTS, true)
                 .param(BlockBreak.SOURCE_PLAYER, player)
                 .param(BlockBreak.BLOCK_DROPS, true)
@@ -151,12 +156,12 @@ abstract class PieBlock : BlockBehavior {
         
         // Calculate item spawn position and motion
         val direction = player.facing.oppositeFace
-        val spawnLocation = pos.block.location.add(0.5, 0.3, 0.5)
+        val spawnLocation = pos.location.add(0.5, 0.3, 0.5)
         val xMotion = direction.direction.x * 0.15
         val yMotion = 0.05
         val zMotion = direction.direction.z * 0.15
         getPieSliceItem().spawnItemEntity(spawnLocation, xMotion, yMotion, zMotion)
-        pos.world.playSound(pos.block.location, Sound.BLOCK_WOOL_BREAK, 0.8f, 0.8f)
+        pos.world.playSound(pos.location, Sound.BLOCK_WOOL_BREAK, 0.8f, 0.8f)
         return InteractionResult.Success()
     }
     

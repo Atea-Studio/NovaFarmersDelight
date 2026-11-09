@@ -1,10 +1,10 @@
 # The nutrition value this food provides.
 nutrition: 3
 # The saturation this food provides.
-saturation: 1.8
+saturation: 1.2
 # Whether the food can always be eaten, or only when hungry.
 can_always_eat: true
 # The time it takes for the food to be consumed, in ticks.
-consume_time: 20
+consume_time: 16
 # A list of effects to apply to the player when this food is consumed.
 possible_effects: []

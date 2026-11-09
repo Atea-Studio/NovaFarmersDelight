@@ -1,9 +1,10 @@
 package fr.ateastudio.farmersdelight.registry
 
 import fr.ateastudio.farmersdelight.NovaFarmersDelight.item
+import org.bukkit.inventory.ItemType
 import xyz.xenondevs.nova.initialize.Init
 import xyz.xenondevs.nova.initialize.InitStage
-import xyz.xenondevs.nova.world.item.NovaItem
+import xyz.xenondevs.nova.registry.RegistryEntry
 
 @Suppress("unused")
 @Init(stage = InitStage.PRE_PACK)
@@ -34,9 +35,9 @@ object GuiItems {
         localizedName: String? = null,
         stretched: Boolean = false,
         background: Boolean = false
-    ): NovaItem = item("gui/opaque/$name") {
+    ): RegistryEntry.Paper<ItemType> = item("gui/opaque/$name") {
         if (localizedName == null) {
-            name(null)
+            name(net.kyori.adventure.text.Component.empty())
         } else localizedName(localizedName)
         hidden(true)
         modelDefinition {

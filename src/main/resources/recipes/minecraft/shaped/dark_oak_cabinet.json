@@ -1,0 +1,14 @@
+{
+  "category": "misc",
+  "result": "farmersdelight:dark_oak_cabinet",
+  "amount": 1,
+  "shape": [
+    "sss",
+    "d d",
+    "sss"
+  ],
+  "ingredients": {
+    "s": "minecraft:dark_oak_slab",
+    "d": "minecraft:dark_oak_trapdoor"
+  }
+}

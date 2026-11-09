@@ -2,10 +2,11 @@ package fr.ateastudio.farmersdelight.block.behavior.crop
 
 import fr.ateastudio.farmersdelight.block.behavior.CropBlock
 import fr.ateastudio.farmersdelight.registry.Items
-import xyz.xenondevs.nova.world.item.NovaItem
+import org.bukkit.inventory.ItemType
+import xyz.xenondevs.nova.registry.RegistryEntry
 
 object CabbageCrop : CropBlock() {
-    override fun resultItem(): NovaItem? {
+    override fun resultItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.CABBAGE
         } catch (e : Exception) {
@@ -13,7 +14,7 @@ object CabbageCrop : CropBlock() {
         }
     }
     
-    override fun seedItem(): NovaItem? {
+    override fun seedItem(): RegistryEntry.Paper<ItemType>? {
         return try {
             Items.CABBAGE_SEEDS
         } catch (e : Exception) {
