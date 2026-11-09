@@ -34,6 +34,7 @@ object CookingPotRecipeGroup : RecipeGroup<CookingPotRecipe>() {
         // Matches the tickrate(20) configured for Blocks.COOKING_POT (see registry/Blocks.kt);
         // NovaTileEntityBlock/novaBlock are internal to Nova and not accessible from addon code.
         val tickrate = 20
+        val container = recipe.container ?: recipe.result.getCraftingRemainingItem()
         return Gui.builder()
             .setStructure(
                 ". i j k . . . p .",
@@ -51,7 +52,7 @@ object CookingPotRecipeGroup : RecipeGroup<CookingPotRecipe>() {
             )
             .addIngredient('p', recipe.result)
             .addIngredient('f', GuiItems.COOKING_POT_HEATED.createItemStack())
-            .addIngredient('b', if (recipe.result.getCraftingRemainingItem().isEmpty) GuiItems.BOWL_UNDERLAY.createItemStack() else recipe.result.getCraftingRemainingItem())
+            .addIngredient('b', if (container.isEmpty) GuiItems.BOWL_UNDERLAY.createItemStack() else container)
             .build()
     }
 }
