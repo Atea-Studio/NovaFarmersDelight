@@ -9,7 +9,7 @@ import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
 import fr.ateastudio.farmersdelight.tileentity.display.ItemDisplaySpec
 import fr.ateastudio.farmersdelight.tileentity.display.PacketItemDisplays
-import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedHopperAccess
+import fr.ateastudio.farmersdelight.tileentity.network.NetworkedInventoryViews
 import fr.ateastudio.farmersdelight.util.counterClockWise
 import fr.ateastudio.farmersdelight.util.isKnife
 import fr.ateastudio.farmersdelight.util.random
@@ -73,15 +73,17 @@ class CuttingBoard(
         postUpdateHandler = { handleStoredItemUpdate() }
     )
 
-    // Inventory access is exposed on every side, at vanilla hopper/dropper speed.
-    private val hopperAccess = RateLimitedHopperAccess(storedItemInventory)
-    @Suppress("unused")
+    // Both access views are direct inventories; there is no merged multi-inventory transfer adapter.
+    private val networkedInventory = NetworkedInventoryViews(storedItemInventory)
     private val itemHolder = storedItemHolder(
-        hopperAccess.merged to NetworkConnectionType.BUFFER,
-        hopperAccess.single to NetworkConnectionType.BUFFER,
-        mergedInventory = hopperAccess.merged,
-        defaultInventoryConfig = CubeFaceMap<NetworkedInventory?>(hopperAccess.merged)
+        networkedInventory.all to NetworkConnectionType.BUFFER,
+        networkedInventory.single to NetworkConnectionType.BUFFER,
+        mergedInventory = networkedInventory.all,
+        defaultInventoryConfig = CubeFaceMap<NetworkedInventory?>(networkedInventory.all)
     )
+
+    override fun requestsLocalNetwork(face: BlockFace): Boolean =
+        itemHolder.connectionConfig[face] != NetworkConnectionType.BUFFER
 
     // Mirrors the original mod's "isItemCarvingBoard" flag: true while a tool is carved onto an
     // otherwise empty board, blocking normal item placement/recipe processing until removed.

@@ -6,7 +6,7 @@ import fr.ateastudio.farmersdelight.block.ComparatorSignals
 import fr.ateastudio.farmersdelight.block.comparatorFullness
 import fr.ateastudio.farmersdelight.block.fullnessSlots
 import fr.ateastudio.farmersdelight.registry.Sounds
-import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedHopperAccess
+import fr.ateastudio.farmersdelight.tileentity.network.NetworkedInventoryViews
 import fr.ateastudio.farmersdelight.util.random
 import xyz.xenondevs.nova.util.CubeFaceMap
 import xyz.xenondevs.nova.world.block.tileentity.NetworkedTileEntity
@@ -14,6 +14,7 @@ import xyz.xenondevs.nova.world.block.tileentity.network.type.NetworkConnectionT
 import xyz.xenondevs.nova.world.block.tileentity.network.type.item.inventory.NetworkedInventory
 import org.bukkit.SoundCategory
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import xyz.xenondevs.cbf.Compound
 import xyz.xenondevs.invui.gui.Gui
 import xyz.xenondevs.invui.inventory.VirtualInventory
@@ -41,16 +42,19 @@ class Cabinet(
     private val inventory: VirtualInventory =
         storedInventory("stored_items", 27, postUpdateHandler = { ComparatorSignals.notifyChanged(block) })
 
-    // Every side supports external item transfer, at vanilla hopper speed.
-    private val hopperAccess = RateLimitedHopperAccess(inventory)
+    // Both access views are direct inventories; there is no merged multi-inventory transfer adapter.
+    private val networkedInventory = NetworkedInventoryViews(inventory)
     private val itemHolder = storedItemHolder(
-        hopperAccess.merged to NetworkConnectionType.BUFFER,
-        hopperAccess.single to NetworkConnectionType.BUFFER,
-        mergedInventory = hopperAccess.merged,
-        defaultInventoryConfig = CubeFaceMap<NetworkedInventory?>(hopperAccess.merged)
+        networkedInventory.all to NetworkConnectionType.BUFFER,
+        networkedInventory.single to NetworkConnectionType.BUFFER,
+        mergedInventory = networkedInventory.all,
+        defaultInventoryConfig = CubeFaceMap<NetworkedInventory?>(networkedInventory.all)
     )
 
     override fun comparatorSignal(): Int = comparatorFullness(inventory.fullnessSlots())
+
+    override fun requestsLocalNetwork(face: BlockFace): Boolean =
+        itemHolder.connectionConfig[face] != NetworkConnectionType.BUFFER
 
     private var openerCount = 0
 

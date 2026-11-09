@@ -14,7 +14,6 @@ import fr.ateastudio.farmersdelight.registry.GuiTextures
 import fr.ateastudio.farmersdelight.registry.RecipeTypes
 import fr.ateastudio.farmersdelight.registry.Sounds
 import fr.ateastudio.farmersdelight.tileentity.network.CookingPotServingInventory
-import fr.ateastudio.farmersdelight.tileentity.network.RateLimitedNetworkedInventory
 import fr.ateastudio.farmersdelight.util.counterClockWise
 import fr.ateastudio.farmersdelight.util.getCraftingRemainingItem
 import fr.ateastudio.farmersdelight.util.hasCraftingRemainingItem
@@ -93,7 +92,7 @@ class CookingPot(
     private val outputInventory = storedInventory("output_slot", 1, ::preventOutputInput, ::takeOutput)
     
     // Top: the six ingredient slots only. Every other face: serving containers in, output out. Never the reservoir.
-    private val networkedIngredients = RateLimitedNetworkedInventory(NetworkedVirtualInventory(ingredientsInventory))
+    private val networkedIngredients = NetworkedVirtualInventory(ingredientsInventory)
     private val networkedServing = CookingPotServingInventory(containerInventory, outputInventory)
         @Suppress("unused")
     private val itemHolder = storedItemHolder(
@@ -101,6 +100,9 @@ class CookingPot(
         networkedServing to NetworkConnectionType.BUFFER,
         defaultInventoryConfig = CubeFaceMap<NetworkedInventory?>(networkedServing).with(BlockFace.UP, networkedIngredients)
     )
+
+    override fun requestsLocalNetwork(face: BlockFace): Boolean =
+        itemHolder.connectionConfig[face] != NetworkConnectionType.BUFFER
     
     private var storedXp: Float by storedValue<Float>("storedXp", true) {0.0f}
     private var currentRecipe: CookingPotRecipe? by storedValue<Key>("currentRecipe", true).mapNonNull(

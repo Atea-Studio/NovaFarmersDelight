@@ -22,13 +22,8 @@ internal class CookingPotServingInventory(
 
     override val size: Int = 2
 
-    // Containers enter at vanilla hopper speed instead of a whole stack per network tick.
-    private val limiter = hopperRateLimiter()
-
     override fun add(itemStack: ItemStack, amount: Int): Int =
-        rateLimitedAdd(limiter, amount) { allowed ->
-            containerInventory.addItem(NetworkedVirtualInventory.UPDATE_REASON, itemStack.clone().also { it.amount = allowed })
-        }
+        containerInventory.addItem(NetworkedVirtualInventory.UPDATE_REASON, itemStack.clone().also { it.amount = amount })
 
     override fun canTake(slot: Int, amount: Int): Boolean {
         if (slot != OUTPUT_SLOT) return false
@@ -54,9 +49,8 @@ internal class CookingPotServingInventory(
 
     override fun canExchangeItemsWith(other: NetworkedInventory): Boolean {
         if (other == this) return false
-        val otherVirtual = (other as? RateLimitedNetworkedInventory)?.delegate ?: other
-        if (otherVirtual is NetworkedVirtualInventory)
-            return otherVirtual.virtualInventory != containerInventory && otherVirtual.virtualInventory != outputInventory
+        if (other is NetworkedVirtualInventory)
+            return other.virtualInventory != containerInventory && other.virtualInventory != outputInventory
         return true
     }
 
